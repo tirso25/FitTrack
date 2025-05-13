@@ -1,0 +1,33 @@
+body {
+  background-color: #f8f9fa;
+  margin: 0;
+}
+
+.login-container,
+.register-container {
+  max-width: 400px;
+  padding: 2rem;
+  background-color: rgba(202, 255, 164, 0.75); 
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-btn {
+  background-color: #294323;
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.custom-btn:hover {
+  background-color: #4a8;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030;
+  background-color: rgba(202, 255, 164, 0.75); 
+  height: 56px;
+}
