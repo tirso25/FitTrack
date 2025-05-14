@@ -1,0 +1,73 @@
+body {
+  background-color: #ffffff;
+}
+
+.navbar {
+  background-color: #caffa4;
+}
+
+.navbar-brand img {
+  height: 50px;
+}
+
+.nav-link {
+  color: #294323;
+  font-weight: 500;
+}
+
+.nav-link.active {
+  font-weight: bold;
+  background-color: #294323;
+  color: white !important;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+
+.sidebar {
+  background-color: #caffa4;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 56px; /* Altura del navbar */
+  overflow-y: auto;
+  width: 25%;
+}
+
+.exercise-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.exercise-img {
+  width: 80px;
+  height: 80px;
+}
+
+.exercise-details {
+  display: none;
+  padding: 1rem;
+  border-top: 1px solid #ccc;
+}
+
+.details-visible {
+  display: block;
+}
+
+.textGreen{
+  color: #294323;
+}
+
+@media (max-width: 991px) {
+  .sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+  }
+
+  .offset-md-3 {
+    margin-left: 0;
+  }
+}

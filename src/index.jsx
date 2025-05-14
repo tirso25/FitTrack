@@ -3,17 +3,28 @@ import { Link } from 'react-router-dom';
 import './index.css';
 
 function Index() {
-  const [mostrarDetalles, setMostrarDetalles] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para determinar si el usuario está logueado
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [detallesVisibles, setDetallesVisibles] = useState([false, false]); // Uno por ejercicio
+  const [bookmarks, setBookmarks] = useState([false, false]); // Uno por ejercicio
 
-  // Función para alternar la visibilidad de la descripción detallada
-  const toggleDetalles = () => {
-    setMostrarDetalles(prev => !prev);
-  };
-
-  // Función para manejar el inicio y cierre de sesión
   const toggleLogin = () => {
     setIsLoggedIn(prev => !prev);
+  };
+
+  const toggleDetalles = (index) => {
+    setDetallesVisibles(prev => {
+      const newVisibles = [...prev];
+      newVisibles[index] = !newVisibles[index];
+      return newVisibles;
+    });
+  };
+
+  const toggleBookmark = (index) => {
+    setBookmarks(prev => {
+      const newBookmarks = [...prev];
+      newBookmarks[index] = !newBookmarks[index];
+      return newBookmarks;
+    });
   };
 
   return (
@@ -31,24 +42,19 @@ function Index() {
               <li className="nav-item">
                 <Link className="nav-link active" to="/">Inicio</Link>
               </li>
-
-              {/* Enlaces solo visibles si el usuario está logueado */}
-              {isLoggedIn && (
+              {isLoggedIn ? (
                 <>
                   <li className="nav-item">
-                    <Link className="nav-link" to="/perfil">Perfil</Link>
+                    <Link className="nav-link" to="/profile">Perfil</Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link" to="/busqueda">Búsqueda</Link>
+                    <Link className="nav-link" to="/searchIn">Búsqueda</Link>
                   </li>
                   <li className="nav-item">
                     <Link className="nav-link" to="#" onClick={toggleLogin}>Salir</Link>
                   </li>
                 </>
-              )}
-
-              {/* Enlaces solo visibles si el usuario no está logueado */}
-              {!isLoggedIn && (
+              ) : (
                 <li className="nav-item">
                   <Link className="nav-link" to="#" onClick={toggleLogin}>Iniciar sesión</Link>
                 </li>
@@ -61,59 +67,56 @@ function Index() {
       <div className="container mt-5">
         <div className="row">
           <div className="col-lg-8">
-            <div className="exercise-card p-3 border">
-              <h3 className="text-center mb-4">Nuevos ejercicios</h3>
+            <h3 className="text-center mb-4">Nuevos ejercicios</h3>
 
-              {/* Botón de abrir/cerrar */}
-              <div className="d-flex justify-content-end mb-2">
-                <button onClick={toggleDetalles} className="btn btn-link p-0">
-                  {mostrarDetalles ? 'Cerrar' : 'Abrir'}
-                </button>
+            {[0, 1].map(index => (
+              <div key={index} className="exercise-card p-3 border mb-3">
+                <div className="d-flex justify-content-end gap-3">
+                  <i
+                    className={`fa-${bookmarks[index] ? 'solid' : 'regular'} fa-bookmark bookmark-toggle ${bookmarks[index] ? 'text-warning' : ''}`}
+                    onClick={() => toggleBookmark(index)}
+                    style={{ cursor: 'pointer' }}
+                  ></i>
+                  <i
+                    className={`fa-solid fa-caret-${detallesVisibles[index] ? 'up' : 'down'}`}
+                    onClick={() => toggleDetalles(index)}
+                    style={{ cursor: 'pointer' }}
+                  ></i>
+                </div>
+
+                {!detallesVisibles[index] ? (
+                  <div className="exercise-summary mt-2">
+                    <div className="d-flex align-items-center">
+                      <img src="/img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" style={{ width: '80px' }} />
+                      <div>
+                        <strong>Nombre del ejercicio</strong> por <strong>Nombre entrenador</strong><br />
+                        <small>Pequeña descripción</small>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="exercise-summary mt-2">
+                    <div className="row mt-2">
+                      <div className="col-md-4 text-center">
+                        <img src="/img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: '120px' }} />
+                        <p><strong>Recomendaciones:</strong><br />Repeticiones u observaciones del entrenador</p>
+                      </div>
+                      <div className="col-md-8">
+                        <h5>Nombre del ejercicio</h5>
+                        <h6 className="text-muted">Nombre entrenador</h6>
+                        <p><strong>Descripción detallada:</strong></p>
+                        <ul>
+                          <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</li>
+                          <li>Ut vel diam non enim rutrum pretium. Pellentesque nibh...</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Mostrar la pequeña descripción o la descripción detallada */}
-              {!mostrarDetalles ? (
-                <div className="exercise-summary">
-                  <div className="d-flex align-items-center">
-                    <img
-                      src="/img/abdominoplastia.png"
-                      alt="ejercicio"
-                      className="exercise-img me-3"
-                      style={{ width: '80px' }}
-                    />
-                    <div>
-                      <strong>Nombre del ejercicio</strong> por <strong>Nombre entrenador</strong><br />
-                      <small>Pequeña descripción del ejercicio.</small>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="exercise-summary">
-                  <div className="row">
-                    <div className="col-md-4 text-center">
-                      <img
-                        src="/img/abdominoplastia.png"
-                        alt="Ejercicio"
-                        className="img-fluid mb-2"
-                        style={{ maxHeight: '120px' }}
-                      />
-                      <p><strong>Recomendaciones:</strong><br />Repeticiones u observaciones del entrenador</p>
-                    </div>
-                    <div className="col-md-8">
-                      <h5>Nombre del ejercicio</h5>
-                      <h6 className="text-muted">Nombre entrenador</h6>
-                      <p><strong>Descripción detallada:</strong></p>
-                      <ul>
-                        <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</li>
-                        <li>Ut vel diam non enim rutrum pretium. Pellentesque nibh...</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            ))}
           </div>
-
+          {isLoggedIn ? (
           <div className="col-lg-4 notification-col">
             <div className="notification-box">
               {[1, 2, 3].map((_, i) => (
@@ -126,6 +129,13 @@ function Index() {
               ))}
             </div>
           </div>
+          ) : (
+            <div className="col-lg-4 notification-col">
+            <div className="notification-box">
+              <h4>No puedes ver los entrenadores que te gustan porque : <br/> <b>No has iniciado sesión.</b></h4>
+            </div>
+          </div>
+          )}
         </div>
       </div>
     </>
