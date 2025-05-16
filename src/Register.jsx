@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Para manejar la redirección
 import { Link } from 'react-router-dom';
-
+import './Register.css';
 function Register() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
@@ -23,14 +23,14 @@ function Register() {
     alert("Cuenta creada exitosamente");
 
     // Redirigir al login o al home después del registro
-    navigate('/login');
+    navigate('/EmailCheck');
   };
 
   return (
     <div>
       <nav className="navbar navbar-expand-lg w-100">
         <div className="container-fluid justify-content-center">
-          <img src="img/logoFinal.png" alt="Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
+          <img src="./public/assets/img/logoFinal.png" alt="Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
         </div>
       </nav>
 

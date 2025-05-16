@@ -32,7 +32,7 @@ function Index() {
       <nav className="navbar navbar-expand-lg sticky-top">
         <div className="container-fluid">
           <a className="navbar-brand mx-auto" href="#">
-            <img src="/img/logoFinal.png" alt="FitTrack" />
+            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
           </a>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
             <span className="navbar-toggler-icon"></span>
@@ -48,7 +48,10 @@ function Index() {
                     <Link className="nav-link" to="/profile">Perfil</Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link" to="/searchIn">Búsqueda</Link>
+                    <Link className="nav-link" to="/search">Búsqueda</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/admin">Administrador</Link>
                   </li>
                   <li className="nav-item">
                     <Link className="nav-link" to="#" onClick={toggleLogin}>Salir</Link>
@@ -87,7 +90,7 @@ function Index() {
                 {!detallesVisibles[index] ? (
                   <div className="exercise-summary mt-2">
                     <div className="d-flex align-items-center">
-                      <img src="/img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" style={{ width: '80px' }} />
+                      <img src="./public/assets/img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" style={{ width: '80px' }} />
                       <div>
                         <strong>Nombre del ejercicio</strong> por <strong>Nombre entrenador</strong><br />
                         <small>Pequeña descripción</small>
@@ -98,7 +101,7 @@ function Index() {
                   <div className="exercise-summary mt-2">
                     <div className="row mt-2">
                       <div className="col-md-4 text-center">
-                        <img src="/img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: '120px' }} />
+                        <img src="./public/assets/img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: '120px' }} />
                         <p><strong>Recomendaciones:</strong><br />Repeticiones u observaciones del entrenador</p>
                       </div>
                       <div className="col-md-8">

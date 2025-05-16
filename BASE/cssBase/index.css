@@ -1,0 +1,64 @@
+ body {
+      background-color: #ffffff;
+    }
+
+    .navbar {
+      background-color: #caffa4;
+    }
+
+    .navbar-brand img {
+      height: 50px;
+    }
+
+    .nav-link {
+      color: #294323;
+      font-weight: 500;
+    }
+
+    .nav-link.active {
+      font-weight: bold;
+      background-color: #294323;
+      color: white !important;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
+
+    .exercise-card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      margin-bottom: 1rem;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .exercise-img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .notification-box {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      background-color: white;
+      border-radius: 10px;
+    }
+
+    .expand-icon {
+      cursor: pointer;
+    }
+
+    .exercise-details {
+      display: none;
+      padding: 1rem;
+      border-top: 1px solid #ccc;
+    }
+
+    .details-visible {
+      display: block;
+    }
+
+    @media (max-width: 991px) {
+      .notification-col {
+        margin-top: 2rem;
+      }
+    }

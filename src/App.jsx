@@ -3,7 +3,11 @@ import { Routes, Route, Link } from 'react-router-dom';
 import SignIn from './SignIn';
 import Register from './Register';
 import Profile from './Profile';
+import Admin from './Admin';
+import Search from './Search';
+import EmailCheck from './EmailCheck';
 import Index from '.';
+import './App.css';
 function App() {
   return (
     <div>
@@ -11,6 +15,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/" element={<Index />} />
+        <Route path="/EmailCheck" element={<EmailCheck />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </div>

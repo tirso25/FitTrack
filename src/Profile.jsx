@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import './Profile.css';
 function Profile() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [exercises, setExercises] = useState([
@@ -54,7 +54,7 @@ const navigate = useNavigate();
       <nav className="navbar navbar-expand-lg sticky-top bg-light">
         <div className="container-fluid">
           <a className="navbar-brand mx-auto" href="#">
-            <img src="img/logoFinal.png" alt="FitTrack" />
+            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
           </a>
           <button
             className="navbar-toggler"
@@ -75,7 +75,10 @@ const navigate = useNavigate();
                     <Link className="nav-link active" to="/profile">Perfil</Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link" to="/searchIn">Búsqueda</Link>
+                    <Link className="nav-link" to="/search">Búsqueda</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/admin">Administrador</Link>
                   </li>
                   <li className="nav-item">
                     <Link className="nav-link" to="#" onClick={toggleLogin}>Salir</Link>
@@ -97,7 +100,7 @@ const navigate = useNavigate();
             <a href="#" className="position-absolute top-0 end-0 m-3 text-dark" title="Editar perfil">
               <i className="fa-solid fa-pen-to-square fa-sm"></i>
             </a>
-            <img src="img/usuario.png" className="img-fluid rounded-circle my-3" style={{ maxWidth: "120px" }} alt="Usuario" />
+            <img src="./public/assets/img//usuario.png" className="img-fluid rounded-circle my-3" style={{ maxWidth: "120px" }} alt="Usuario" />
             <p><strong>Nombre</strong></p>
             <p>Fecha</p>
             <p>correo@ejemplo.com</p>
@@ -123,7 +126,7 @@ const navigate = useNavigate();
                     </div>
                     <div className="d-flex justify-content-between align-items-center mt-2">
                       <div className="d-flex align-items-center">
-                        <img src="img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" />
+                        <img src="./public/assets/img//abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" />
                         <div>
                           <strong>Nombre del ejercicio</strong> por <strong>Nombre entrenador</strong><br />
                           <small>Pequeña descripción</small>
@@ -142,7 +145,7 @@ const navigate = useNavigate();
                     </div>
                     <div className="row mt-2">
                       <div className="col-md-4 text-center">
-                        <img src="img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: "120px" }} />
+                        <img src="./public/assets/img//abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: "120px" }} />
                         <p><strong>Recomendaciones:</strong><br />Repeticiones u observaciones del entrenador</p>
                       </div>
                       <div className="col-md-8">

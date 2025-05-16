@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmación de correo - FitTrack</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/confirmacion.css">
+</head>
+<body>
+
+  <nav class="navbar d-flex align-items-center justify-content-center">
+    <img src="img/logoFinal.png" alt="Logo" class="img-fluid">
+  </nav>
+
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 140px);">
+        <div class="card-confirm">
+            <h5 class="mb-3">Confirmación de correo</h5>
+            <input type="email" id="correoInput" class="form-control mb-3" placeholder="Correo electrónico">
+            <button class="btn-confirmar w-100" id="btnComprobar">Comprobar</button>
+        </div>
+    </div>
+
+  <div class="modal fade" id="codigoModal" tabindex="-1" aria-labelledby="codigoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 12px;">
+        <div class="modal-header" style="background-color: #ccf5b0; border-bottom: none;">
+          <h5 class="modal-title" id="codigoModalLabel">Verificación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p>Introduce el código que te hemos enviado por correo electrónico:</p>
+          <input type="text" class="form-control mb-3" placeholder="Código de verificación">
+          <button class="btn-confirmar w-100">Verificar código</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.getElementById('btnComprobar').addEventListener('click', () => {
+      const correo = document.getElementById('correoInput').value.trim();
+      if (correo === "") {
+        alert("Por favor, introduce tu correo electrónico.");
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('codigoModal'));
+        modal.show();
+      }
+    });
+  </script>
+
+</body>
+</html>
