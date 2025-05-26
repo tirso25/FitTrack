@@ -1,10 +1,10 @@
 body {
   background-color: #f8f9fa;
   margin: 0;
+  font-family: 'Arial', sans-serif;
 }
 
-.login-container,
-.register-container {
+.login-container {
   max-width: 400px;
   padding: 2rem;
   background-color: rgba(202, 255, 164, 0.75); 
@@ -23,11 +23,44 @@ body {
   background-color: #4a8;
 }
 
-.navbar {
-  position: fixed;
-  top: 0;
+.logo-centered {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 150px;
+}
+
+.logo-centered img {
   width: 100%;
-  z-index: 1030;
-  background-color: rgba(202, 255, 164, 0.75); 
-  height: 56px;
+  height: auto;
+}
+.navbar {
+  overflow-x: hidden;
+}
+
+.btn.custom-btn {
+  background-color: #294323;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.btn.custom-btn:hover {
+  background-color: #3d5a29;
+}
+
+.link-register {
+  color: #294323;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link-register:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 576px) {
+  .login-container {
+    padding: 0 15px;
+  }
 }

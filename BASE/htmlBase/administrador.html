@@ -1,18 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Administrador - FitTrack</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/administrador.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.3.1/css/dataTables.dataTables.min.css" />
+  <style>
+    body {
+      background-color: #f5f5f5;
+    }
+
+    .navbar {
+      background-color: #ccf5b0;
+    }
+    .navbar-brand img {
+      height: 50px;
+    }
+
+    .navbar .nav-link.active {
+      background-color: #1d2b10;
+      color: white !important;
+    }
+
+    /* Estilo para el switch, haciendo que el "toggle" tenga tu estilo */
+    .form-check-input {
+      width: 50px;
+      height: 26px;
+      cursor: pointer;
+      background-color: #a1f57a;
+      border-radius: 15px;
+      position: relative;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      outline: none;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease;
+    }
+    .form-check-input:checked {
+      background-color: #6dbe43;
+    }
+    .form-check-input::before {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      top: 2px;
+      left: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    .form-check-input:checked::before {
+      transform: translateX(24px);
+    }
+
+    .shadow-box {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.15);
+      margin-top: 20px;
+    }
+
+    .table thead {
+      border-bottom: 2px solid black;
+    }
+
+    .btn-edit {
+      background-color: #a1f57a;
+      border: none;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    .btn-delete {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    .btn-delete:hover {
+      color: red;
+    }
+
+    .table-title {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 20px 0 10px;
+    }
+
+    /* Contenedor para alinear el switch a la derecha */
+    .switch-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-light px-4">
   <a class="navbar-brand mx-auto" href="#">
-      <img src="img/logoFinal.png" alt="FitTrack">
-    </a>
+    <img src="../public/img/assets/logoFinal.png" alt="FitTrack" />
+  </a>
   <div class="collapse navbar-collapse justify-content-end">
     <ul class="navbar-nav">
       <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
@@ -27,16 +123,13 @@
 <div class="container my-4">
   <div class="shadow-box">
 
-    <div class="d-flex align-items-center mb-3 flex-wrap gap-2">
-      <input type="text" class="form-control me-3" placeholder="Búsqueda" style="max-width: 300px;">
-      <div id="botones-filtro" class="d-flex align-items-center flex-wrap gap-2">
-
-      </div>
-      <button class="btn-switch ms-auto" onclick="toggleView()">Cambiar vista</button>
+    <div class="switch-container">
+      <input class="form-check-input" type="checkbox" id="switchVista" onchange="toggleView()" aria-label="Cambiar vista" />
     </div>
 
     <div id="tabla-usuarios">
-      <table class="table align-middle text-center">
+      <div class="table-title">Usuarios</div>
+      <table id="tablaUsuarios" class="table display align-middle text-center">
         <thead>
           <tr>
             <th>Email</th>
@@ -60,7 +153,8 @@
     </div>
 
     <div id="tabla-ejercicios" style="display: none;">
-      <table class="table align-middle text-center">
+      <div class="table-title">Ejercicios</div>
+      <table id="tablaEjercicios" class="table display align-middle text-center">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -86,34 +180,19 @@
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.1/js/dataTables.min.js"></script>
 <script>
-  let vistaEjercicios = false;
-
   function toggleView() {
-    vistaEjercicios = !vistaEjercicios;
-    document.getElementById('tabla-usuarios').style.display = vistaEjercicios ? 'none' : 'block';
-    document.getElementById('tabla-ejercicios').style.display = vistaEjercicios ? 'block' : 'none';
-    renderBotonesFiltro();
+    const checked = document.getElementById('switchVista').checked;
+    document.getElementById('tabla-usuarios').style.display = checked ? 'none' : 'block';
+    document.getElementById('tabla-ejercicios').style.display = checked ? 'block' : 'none';
   }
 
-  function renderBotonesFiltro() {
-    const contenedor = document.getElementById('botones-filtro');
-    contenedor.innerHTML = '';
-
-    const btn1 = document.createElement('button');
-    btn1.className = 'btn-fit';
-    btn1.textContent = vistaEjercicios ? 'Ejercicios' : 'Usuarios';
-
-    const btn2 = document.createElement('button');
-    btn2.className = 'btn-fit';
-    btn2.textContent = 'Entrenadores';
-
-    contenedor.appendChild(btn1);
-    contenedor.appendChild(btn2);
-  }
-
-  // Inicial
-  renderBotonesFiltro();
+  $(document).ready(function () {
+    $('#tablaUsuarios').DataTable();
+    $('#tablaEjercicios').DataTable();
+  });
 </script>
 
 </body>

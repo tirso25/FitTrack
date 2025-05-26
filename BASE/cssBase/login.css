@@ -3,8 +3,7 @@ body {
   margin: 0;
 }
 
-.login-container,
-.register-container {
+.login-container {
   max-width: 400px;
   padding: 2rem;
   background-color: rgba(202, 255, 164, 0.75); 

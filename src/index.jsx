@@ -4,8 +4,8 @@ import './index.css';
 
 function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [detallesVisibles, setDetallesVisibles] = useState([false, false]); // Uno por ejercicio
-  const [bookmarks, setBookmarks] = useState([false, false]); // Uno por ejercicio
+  const [detallesVisibles, setDetallesVisibles] = useState([false, false]); 
+  const [bookmarks, setBookmarks] = useState([false, false]); 
 
   const toggleLogin = () => {
     setIsLoggedIn(prev => !prev);
@@ -59,7 +59,7 @@ function Index() {
                 </>
               ) : (
                 <li className="nav-item">
-                  <Link className="nav-link" to="#" onClick={toggleLogin}>Iniciar sesión</Link>
+                  <Link className="nav-link" to="./SignIn" onClick={toggleLogin}>Iniciar sesión</Link>
                 </li>
               )}
             </ul>

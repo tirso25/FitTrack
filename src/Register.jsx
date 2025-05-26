@@ -1,29 +1,44 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Para manejar la redirección
+import { useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
 import './Register.css';
+
 function Register() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVerify, setPasswordVerify] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Manejar el submit del formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar las contraseñas
     if (password !== passwordVerify) {
-      alert("Las contraseñas no coinciden");
+      setError('Las contraseñas no coinciden');
       return;
     }
 
-    // Aquí podrías agregar lógica para enviar los datos al backend
-    alert("Cuenta creada exitosamente");
+    try {
+      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nombre, email, password })
+      });
 
-    // Redirigir al login o al home después del registro
-    navigate('/EmailCheck');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al registrar');
+      }
+
+      alert('Cuenta creada exitosamente');
+      navigate('/EmailCheck', { state: { email } });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -34,7 +49,7 @@ function Register() {
         </div>
       </nav>
 
-      <div className="container d-flex justify-content-center align-items-center min-vh-100" style={{ paddingTop: '70px' }}>
+      <div className="container d-flex justify-content-center align-items-center min-vh-100">
         <div className="register-container w-100">
           <h3 className="text-center mb-4">Crea una cuenta</h3>
           <form onSubmit={handleSubmit}>
@@ -82,6 +97,11 @@ function Register() {
                 required
               />
             </div>
+            {error && (
+              <div className="alert alert-danger text-center" role="alert">
+                {error}
+              </div>
+            )}
             <button type="submit" className="btn custom-btn w-100">Crear cuenta</button>
           </form>
           <div className="mt-4 text-center">
@@ -96,3 +116,4 @@ function Register() {
 }
 
 export default Register;
+

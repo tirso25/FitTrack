@@ -1,10 +1,29 @@
- body {
-      background-color: #ffffff;
-    }
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+#root {
+  display: contents;
+}
 
     .navbar {
-      background-color: #caffa4;
-    }
+  background-color: #caffa4;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1000;
+}
+
 
     .navbar-brand img {
       height: 50px;
@@ -22,6 +41,12 @@
       border-radius: 5px;
       padding: 5px 10px;
     }
+
+    .navbar-collapse,
+    .navbar-nav {
+      background-color: #caffa4;
+    }
+
 
     .exercise-card {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);

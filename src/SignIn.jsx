@@ -1,39 +1,91 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './SignIn.css';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './SignIn.css'; 
 
 function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    document.body.style.backgroundColor = '#f8f9fa';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Correo:', email);
-    console.log('Contraseña:', password);
+
+    try {
+      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) throw new Error('Credenciales inválidas');
+
+      const data = await response.json();
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('rol', data.rol);
+        navigate('/profile');
+      } else {
+        throw new Error('Token no recibido');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg w-100">
-        <div className="container-fluid justify-content-center">
-          <img
-            src="./public/assets/img/logoFinal.png"
-            alt="Logo"
-            className="img-fluid"
-            style={{ maxWidth: '150px' }}
-          />
+      <nav className="navbar navbar-expand-lg sticky-top">
+        <div className="container">
+          <a
+            className="navbar-brand logo-centered"
+            href="/"
+            aria-label="FitTrack Home"
+          >
+            <img src="/assets/img/logoFinal.png" alt="FitTrack" />
+          </a>
+
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarMenuSignIn"
+            aria-controls="navbarMenuSignIn"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div className="collapse navbar-collapse justify-content-end" id="navbarMenuSignIn">
+            <ul className="navbar-nav mb-2 mb-lg-0">
+              <li className="nav-item">
+                <Link className="nav-link active" to="/">
+                  Inicio
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
       </nav>
 
-      <div className="container d-flex justify-content-center align-items-center min-vh-100" style={{ paddingTop: '70px' }}>
-        <div className="login-container w-100">
+      <div className="container d-flex justify-content-center align-items-center min-vh-100">
+        <div className="login-container w-100" style={{ maxWidth: '400px' }}>
           <h3 className="text-center mb-4">Iniciar Sesión</h3>
-          <form id="loginForm" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <input
                 type="email"
                 className="form-control"
-                id="email"
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -44,20 +96,24 @@ function SignIn() {
               <input
                 type="password"
                 className="form-control"
-                id="password"
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
+            {error && (
+              <div className="alert alert-danger text-center" role="alert">
+                {error}
+              </div>
+            )}
             <button type="submit" className="btn custom-btn w-100">
               Iniciar sesión
             </button>
           </form>
           <div className="mt-4 text-center">
-            <Link to="/register" style={{ color: '#294323' }}>
-                Regístrate en FitTrack
+            <Link to="/register" className="link-register">
+              Regístrate en FitTrack
             </Link>
           </div>
         </div>
