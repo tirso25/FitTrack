@@ -32,7 +32,7 @@ function Index() {
       <nav className="navbar navbar-expand-lg sticky-top">
         <div className="container-fluid">
           <a className="navbar-brand mx-auto" href="#">
-            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
+            <img src="/assets/img/logoFinal.png" alt="FitTrack" />
           </a>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
             <span className="navbar-toggler-icon"></span>
