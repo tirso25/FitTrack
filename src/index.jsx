@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import './index.css';
 
 function Index() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [detallesVisibles, setDetallesVisibles] = useState([false, false]); 
-  const [bookmarks, setBookmarks] = useState([false, false]); 
+  const [detallesVisibles, setDetallesVisibles] = useState([false, false]);
+  const [bookmarks, setBookmarks] = useState([false, false]);
+  const email = localStorage.getItem('email');
 
-  const toggleLogin = () => {
-    setIsLoggedIn(prev => !prev);
-  };
+
 
   const toggleDetalles = (index) => {
     setDetallesVisibles(prev => {
@@ -42,7 +40,7 @@ function Index() {
               <li className="nav-item">
                 <Link className="nav-link active" to="/">Inicio</Link>
               </li>
-              {isLoggedIn ? (
+              {email ? (
                 <>
                   <li className="nav-item">
                     <Link className="nav-link" to="/profile">Perfil</Link>
@@ -54,12 +52,12 @@ function Index() {
                     <Link className="nav-link" to="/admin">Administrador</Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link" to="#" onClick={toggleLogin}>Salir</Link>
+                    <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
                   </li>
                 </>
               ) : (
                 <li className="nav-item">
-                  <Link className="nav-link" to="./SignIn" onClick={toggleLogin}>Iniciar sesión</Link>
+                  <Link className="nav-link" to="/signIn">Iniciar Sesión</Link>
                 </li>
               )}
             </ul>
@@ -119,25 +117,25 @@ function Index() {
               </div>
             ))}
           </div>
-          {isLoggedIn ? (
-          <div className="col-lg-4 notification-col">
-            <div className="notification-box">
-              {[1, 2, 3].map((_, i) => (
-                <div className="mb-3" key={i}>
-                  <strong>Nombre entrenador</strong><br />
-                  <small>Ha subido un nuevo ejercicio de (músculo)</small>
-                  <i className="fa-regular fa-eye float-end"></i>
-                  <hr />
-                </div>
-              ))}
+          {email ? (
+            <div className="col-lg-4 notification-col">
+              <div className="notification-box">
+                {[1, 2, 3].map((_, i) => (
+                  <div className="mb-3" key={i}>
+                    <strong>Nombre entrenador</strong><br />
+                    <small>Ha subido un nuevo ejercicio de (músculo)</small>
+                    <i className="fa-regular fa-eye float-end"></i>
+                    <hr />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
           ) : (
             <div className="col-lg-4 notification-col">
-            <div className="notification-box">
-              <h4>No puedes ver los entrenadores que te gustan porque : <br/> <b>No has iniciado sesión.</b></h4>
+              <div className="notification-box">
+                <h4>No puedes ver los entrenadores que te gustan porque: <br /> <b>No has iniciado sesión.</b></h4>
+              </div>
             </div>
-          </div>
           )}
         </div>
       </div>

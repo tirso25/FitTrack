@@ -1,172 +1,237 @@
-import React, { useState, useEffect, useRef } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import React, { useState, useEffect } from "react";
+import { useNavigate,Link, useLocation  } from "react-router-dom";
+
 import "./Admin.css";
-import $ from "jquery";
-import "datatables.net-dt/css/dataTables.dataTables.css";
-import "datatables.net";
-import { Link } from "react-router-dom";
 
-function Admin() {
-  const usuariosMock = [
-    { email: "usuario1@correo.com", fecha: "2025-05-15", tipo: "Entrenador" },
-    { email: "usuario2@correo.com", fecha: "2025-04-20", tipo: "Administrador" },
-  ];
+const Admin = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  const [rolesDisponibles, setRolesDisponibles] = useState([]);
 
-  const ejerciciosMock = [
-    { nombre: "Sentadilla", fecha: "2025-05-10", entrenador: "entrenador@correo.com" },
-    { nombre: "Flexiones", fecha: "2025-04-22", entrenador: "coach@correo.com" },
-  ];
-
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [vistaEjercicios, setVistaEjercicios] = useState(false);
-  const tablaUsuariosRef = useRef(null);
-  const tablaEjerciciosRef = useRef(null);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    let tabla;
-    if (!vistaEjercicios) {
-      tabla = $(tablaUsuariosRef.current).DataTable();
-    } else {
-      tabla = $(tablaEjerciciosRef.current).DataTable();
-    }
+    const obtenerUsuarios = async () => {
+      try {
+        const res = await fetch("https://fittrackapi-fmwr.onrender.com/api/users/seeAllUsers", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    return () => {
-      if (tabla) tabla.destroy();
+        if (!res.ok) throw new Error("Fallo al obtener usuarios");
+        const data = await res.json();
+        setUsuarios(data);
+          console.log(data);
+
+      } catch (error) {
+        alert("Error al cargar usuarios: " + error.message);
+      }
     };
-  }, [vistaEjercicios]);
 
-  const toggleLogin = () => {
-    setIsLoggedIn(prev => !prev);
+    obtenerUsuarios();
+  }, [token]);
+
+  const abrirModalModificar = async (id) => {
+    try {
+      const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Error obteniendo datos del usuario");
+      const data = await res.json();
+      setUsuarioSeleccionado(data);
+      
+      setRolesDisponibles(data.roles);
+      setModalVisible(true);
+    } catch (err) {
+      alert("Error al cargar datos: " + err.message);
+    }
   };
 
-  const toggleView = () => {
-    setVistaEjercicios(prev => !prev);
+  const guardarCambiosUsuario = async () => {
+    try {
+      const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${usuarioSeleccionado.id_usr}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          username: usuarioSeleccionado.username,
+          description: usuarioSeleccionado.description,
+          status: usuarioSeleccionado.status,
+          role_id: usuarioSeleccionado.role_id,
+          public: usuarioSeleccionado.public,
+          password: usuarioSeleccionado.password,
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Error al guardar cambios");
+      alert(result.message);
+      setModalVisible(false);
+      window.location.reload();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
   };
 
   return (
-    <>
-      <nav className="navbar navbar-expand-lg sticky-top">
+    <div className="admin-container">
+       {/* NAVBAR */}
+      <nav className="navbar navbar-expand-lg sticky-top bg-light">
         <div className="container-fluid">
-          <a className="navbar-brand mx-auto" href="#">
-            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
+          <a className="navbar-brand mx-auto" href="/">
+            <img src="/assets/img/logoFinal.png" alt="FitTrack" />
           </a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarMenu"
+          >
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse justify-content-end" id="navbarMenu">
-            <ul className="navbar-nav mb-2 mb-lg-0">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link className="nav-link" to="/">Inicio</Link>
+                <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
               </li>
-              {isLoggedIn ? (
-                <>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/profile">Perfil</Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/search">Búsqueda</Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className={`nav-link ${window.location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="#" onClick={toggleLogin}>Salir</Link>
-                  </li>
-                </>
-              ) : (
-                <li className="nav-item">
-                  <Link className="nav-link" to="#" onClick={toggleLogin}>Iniciar sesión</Link>
-                </li>
-              )}
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
+              </li>
             </ul>
           </div>
         </div>
       </nav>
+      <h1 className="text-center my-4">Panel de Administración</h1>
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {usuarios.map((user) => (
+            <tr key={user.id_usr}>
+              <td>{user.id_usr}</td>
+              <td>{user.username}</td>
+              <td>{user.email}</td>
+              <td>{user.role}</td>
+              <td>{user.status}</td>
+              <td>
+                <button className="btn btn-primary btn-sm" onClick={() => abrirModalModificar(user.id_usr)}>
+                  Modificar
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-      <div className="container my-4">
-        <div className="shadow-box">
-          <div className="switch-container mb-3">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="switchVista"
-              checked={vistaEjercicios}
-              onChange={toggleView}
-              aria-label="Cambiar vista"
-            />
+      {modalVisible && usuarioSeleccionado && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog" role="document">
+            <div className="modal-content p-3">
+              <div className="modal-header">
+                <h5 className="modal-title">Modificar Usuario</h5>
+                <button type="button" className="btn-close" onClick={() => setModalVisible(false)} />
+              </div>
+              <div className="modal-body">
+                <div className="mb-2">
+                  <label>Email (no editable)</label>
+                  <input className="form-control" value={usuarioSeleccionado.email} disabled />
+                </div>
+                <div className="mb-2">
+                  <label>Nombre de usuario</label>
+                  <input
+                    className="form-control"
+                    value={usuarioSeleccionado.username}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, username: e.target.value })}
+                  />
+                </div>
+                <div className="mb-2">
+                  <label>Contraseña</label>
+                  <input
+                    className="form-control"
+                    placeholder="Deja el campo vacío si no quieres modificar la contraseña"
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, password: e.target.value })}
+                  />
+                </div>
+                <div className="mb-2">
+                  <label>Descripción</label>
+                  <textarea
+                    className="form-control"
+                    value={usuarioSeleccionado.description || ""}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, description: e.target.value })}
+                  />
+                </div>
+                <div className="mb-2">
+                  <label>Estado</label>
+                  <select
+                    className="form-select"
+                    value={usuarioSeleccionado.status}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, status: e.target.value })}
+                  >
+                    <option value="active">Activo</option>
+                    <option value="deleted">Eliminado</option>
+                  </select>
+                </div>
+                <div className="mb-2">
+                  <label>Rol</label>
+                  <select
+                    className="form-select"
+                    value={usuarioSeleccionado.role_id}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, role_id: parseInt(e.target.value) })}
+                  >
+                    {rolesDisponibles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-check mb-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={usuarioSeleccionado.public}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, public: e.target.checked })}
+                  />
+                  <label className="form-check-label">Perfil público</label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-primary" onClick={guardarCambiosUsuario}>Guardar</button>
+                <button className="btn btn-secondary" onClick={() => setModalVisible(false)}>Cancelar</button>
+              </div>
+            </div>
           </div>
-
-          {!vistaEjercicios && (
-            <div id="tabla-usuarios">
-              <div className="table-title">Usuarios</div>
-              <table
-                ref={tablaUsuariosRef}
-                id="tablaUsuarios"
-                className="table display align-middle text-center"
-              >
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Fecha creación</th>
-                    <th>Tipo usuario</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usuariosMock.map((user, i) => (
-                    <tr key={i}>
-                      <td>{user.email}</td>
-                      <td>{user.fecha}</td>
-                      <td>{user.tipo}</td>
-                      <td>
-                        <button className="btn-edit">Modificar</button>
-                        <button className="btn-delete" title="Eliminar">🗑️</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {vistaEjercicios && (
-            <div id="tabla-ejercicios">
-              <div className="table-title">Ejercicios</div>
-              <table
-                ref={tablaEjerciciosRef}
-                id="tablaEjercicios"
-                className="table display align-middle text-center"
-              >
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Fecha creación</th>
-                    <th>Entrenador</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ejerciciosMock.map((ej, i) => (
-                    <tr key={i}>
-                      <td>{ej.nombre}</td>
-                      <td>{ej.fecha}</td>
-                      <td>{ej.entrenador}</td>
-                      <td>
-                        <button className="btn-edit">Modificar</button>
-                        <button className="btn-delete" title="Eliminar">🗑️</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
-}
+};
 
 export default Admin;
-
-

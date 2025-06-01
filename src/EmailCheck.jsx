@@ -1,22 +1,36 @@
 import { useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation,useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './EmailCheck.css';
 
 export default function EmailCheck() {
   const location = useLocation();
-  const correoInicial = location.state?.email || '';
-  const [correo, setCorreo] = useState(correoInicial);
+  const emailInicial = location.state?.email || '';
+  const [email, setEmail] = useState(emailInicial);
   const modalRef = useRef(null);
-
-  const handleComprobarClick = () => {
-    if (correo.trim() === '') {
-      alert('Por favor, introduce tu correo electrónico.');
+const navigate = useNavigate();
+  const handleComprobarClick = async () => {
+    if (email.trim() === '') {
+      alert('Por favor, introduce tu email electrónico.');
     } else {
       const modal = new window.bootstrap.Modal(modalRef.current);
       modal.show();
     }
+    const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/sendEmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+      if (!response.ok) {
+        
+        const errorData = await response.json();
+        console.log(errorData);
+        
+      }
+      navigate('/SignIn');
   };
 
   return (
@@ -30,13 +44,13 @@ export default function EmailCheck() {
         style={{ minHeight: 'calc(100vh - 140px)' }}
       >
         <div className="card-confirm">
-          <h5 className="mb-3">Confirmación de correo</h5>
+          <h5 className="mb-3">Confirmación de email</h5>
           <input
             type="email"
             className="form-control mb-3"
-            placeholder="Correo electrónico"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
+            placeholder="email electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <button className="btn-confirmar w-100" onClick={handleComprobarClick}>
             Comprobar
@@ -69,7 +83,7 @@ export default function EmailCheck() {
               ></button>
             </div>
             <div className="modal-body text-center">
-              <p>Introduce el código que te hemos enviado por correo electrónico:</p>
+              <p>Introduce el código que te hemos enviado por email electrónico:</p>
               <input
                 type="text"
                 className="form-control mb-3"

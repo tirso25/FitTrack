@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import './Profile.css';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, useLocation } from 'react-router-dom';
-
 const Profile = () => {
   const [detallesVisibles, setDetallesVisibles] = useState([false, false]); 
   const [bookmarks, setBookmarks] = useState([false, false]); 
   const location = useLocation();
+  const email = localStorage.getItem('email');
+  const username = localStorage.getItem('username');
+
 
   const toggleDetalles = (index) => {
     setDetallesVisibles(prev => {
@@ -57,7 +59,7 @@ const Profile = () => {
                 <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="#">Salir</Link>
+                <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
               </li>
             </ul>
           </div>
@@ -71,9 +73,9 @@ const Profile = () => {
               <i className="fa-solid fa-pen-to-square fa-sm"></i>
             </a>
             <img src="/assets/img/usuario.png" className="img-fluid rounded-circle my-3" style={{ maxWidth: '120px' }} alt="Usuario" />
-            <p><strong>Nombre</strong></p>
+            <p><strong>{ username }</strong></p>
             <p>Fecha</p>
-            <p>correo@ejemplo.com</p>
+            <p>{ email }</p>
             <p>Descripción</p>
           </div>
 

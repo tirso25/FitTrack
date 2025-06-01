@@ -5,35 +5,34 @@ import { Link } from 'react-router-dom';
 import './Register.css';
 
 function Register() {
-  const [nombre, setNombre] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordVerify, setPasswordVerify] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (password !== passwordVerify) {
+    if (password !== repeatPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
     try {
-      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/register', {
+      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/signUp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ nombre, email, password })
+        body: JSON.stringify({ username, email, password, repeatPassword })
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al registrar');
       }
-
+      
       alert('Cuenta creada exitosamente');
       navigate('/EmailCheck', { state: { email } });
     } catch (err) {
@@ -57,10 +56,10 @@ function Register() {
               <input
                 type="text"
                 className="form-control"
-                id="nombre"
+                id="username"
                 placeholder="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
@@ -90,10 +89,10 @@ function Register() {
               <input
                 type="password"
                 className="form-control"
-                id="passwordVerify"
+                id="repeatPassword"
                 placeholder="Verifica contraseña"
-                value={passwordVerify}
-                onChange={(e) => setPasswordVerify(e.target.value)}
+                value={repeatPassword}
+                onChange={(e) => setRepeatPassword(e.target.value)}
                 required
               />
             </div>

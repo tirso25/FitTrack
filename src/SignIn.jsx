@@ -2,11 +2,17 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SignIn.css'; 
-
+import { faTable } from '@fortawesome/free-solid-svg-icons';
 function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  var [rememberme, setRememberme] = useState('');
+  if(rememberme){
+    rememberme = true;
+  } else {
+    rememberme = false;
+  }
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,18 +26,22 @@ function SignIn() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/login', {
+      const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/signIn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+        body: JSON.stringify({ email, password , rememberme}),
       });
-
-      if (!response.ok) throw new Error('Credenciales inválidas');
+     
 
       const data = await response.json();
-
+      console.log(data);
+      
       if (data.token) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('email' ,data.userData.this_user_email);
+        localStorage.setItem('username' ,data.userData.this_user_username);
+        localStorage.setItem('id' ,data.userData.this_user_id);
         localStorage.setItem('rol', data.rol);
         navigate('/profile');
       } else {
@@ -86,7 +96,7 @@ function SignIn() {
               <input
                 type="email"
                 className="form-control"
-                placeholder="Correo electrónico"
+                placeholder="Correo electrónico o nombre de usuario"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -100,6 +110,13 @@ function SignIn() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+              />
+            </div>
+            <div className="mb-3">
+              Mantener la sesión iniciada
+              <input
+                type="checkbox"
+                onChange={(e) => setRememberme(e.target.value)}
               />
             </div>
             {error && (

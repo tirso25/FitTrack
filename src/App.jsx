@@ -3,6 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import SignIn from './SignIn';
 import Register from './Register';
 import Profile from './Profile';
+import SignOut from './SignOut';
 import Admin from './Admin';
 import Search from './Search';
 import EmailCheck from './EmailCheck';
@@ -18,6 +19,7 @@ function App() {
         <Route path="/EmailCheck" element={<EmailCheck />} />
         <Route path="/search" element={<Search />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/signout" element={<SignOut />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </div>
