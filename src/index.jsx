@@ -1,12 +1,38 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './index.css';
 
 function Index() {
-  const [detallesVisibles, setDetallesVisibles] = useState([false, false]);
-  const [bookmarks, setBookmarks] = useState([false, false]);
+  const [exercises, setExercises] = useState([]);
+  const [detallesVisibles, setDetallesVisibles] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
   const email = localStorage.getItem('email');
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setExercises(data);
+          setDetallesVisibles(Array(data.length).fill(false));
+          setBookmarks(Array(data.length).fill(false));
+        } else {
+          console.error(data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error al obtener los ejercicios:', error);
+      });
+  }, []);
 
 
   const toggleDetalles = (index) => {
@@ -70,8 +96,8 @@ function Index() {
           <div className="col-lg-8">
             <h3 className="text-center mb-4">Nuevos ejercicios</h3>
 
-            {[0, 1].map(index => (
-              <div key={index} className="exercise-card p-3 border mb-3">
+            {exercises.map((exercise, index) => (
+              <div key={exercise.id_exe} className="exercise-card p-3 border mb-3">
                 <div className="d-flex justify-content-end gap-3">
                   <i
                     className={`fa-${bookmarks[index] ? 'solid' : 'regular'} fa-bookmark bookmark-toggle ${bookmarks[index] ? 'text-warning' : ''}`}
@@ -88,10 +114,10 @@ function Index() {
                 {!detallesVisibles[index] ? (
                   <div className="exercise-summary mt-2">
                     <div className="d-flex align-items-center">
-                      <img src="./public/assets/img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" style={{ width: '80px' }} />
+                      <img src="/assets/img/abdominoplastia.png" alt="ejercicio" className="exercise-img me-3" style={{ width: '80px' }} />
                       <div>
-                        <strong>Nombre del ejercicio</strong> por <strong>Nombre entrenador</strong><br />
-                        <small>Pequeña descripción</small>
+                        <strong>{exercise.name}</strong> por <strong>{exercise.creator}</strong><br />
+                        <small>{exercise.description}</small>
                       </div>
                     </div>
                   </div>
@@ -99,32 +125,39 @@ function Index() {
                   <div className="exercise-summary mt-2">
                     <div className="row mt-2">
                       <div className="col-md-4 text-center">
-                        <img src="./public/assets/img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: '120px' }} />
-                        <p><strong>Recomendaciones:</strong><br />Repeticiones u observaciones del entrenador</p>
+                        <img src="/assets/img/abdominoplastia.png" alt="Ejercicio" className="img-fluid mb-2" style={{ maxHeight: '120px' }} />
+                        <p><strong>Recomendaciones:</strong><br />Ejemplo: series, repeticiones, tips</p>
                       </div>
                       <div className="col-md-8">
-                        <h5>Nombre del ejercicio</h5>
-                        <h6 className="text-muted">Nombre entrenador</h6>
+                        <h5>{exercise.name}</h5>
+                        <h6 className="text-muted">{exercise.creator}</h6>
                         <p><strong>Descripción detallada:</strong></p>
                         <ul>
-                          <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</li>
-                          <li>Ut vel diam non enim rutrum pretium. Pellentesque nibh...</li>
+                          <li>{exercise.description}</li>
+                          <li>Músculo: {exercise.category}</li>
+                          <li>Likes: {exercise.likes}</li>
+                          <li>Fecha: {new Date(exercise.created_at).toLocaleDateString()}</li>
                         </ul>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
+
             ))}
           </div>
           {email ? (
             <div className="col-lg-4 notification-col">
               <div className="notification-box">
-                {[1, 2, 3].map((_, i) => (
+                {exercises.map((exercise, i) => (
                   <div className="mb-3" key={i}>
-                    <strong>Nombre entrenador</strong><br />
-                    <small>Ha subido un nuevo ejercicio de (músculo)</small>
-                    <i className="fa-regular fa-eye float-end"></i>
+                    <strong>{exercise.creator}</strong><br />
+                    <small>Ha subido un nuevo ejercicio de {exercise.category}</small>
+                    <i
+                      className="fa-regular fa-eye float-end"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/profile/${exercise.coach_id}`)}
+                    ></i>
                     <hr />
                   </div>
                 ))}
