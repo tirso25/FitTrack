@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useLocation,useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './EmailCheck.css';
@@ -8,35 +8,54 @@ export default function EmailCheck() {
   const location = useLocation();
   const emailInicial = location.state?.email || '';
   const [email, setEmail] = useState(emailInicial);
+  const [codigo, setCodigo] = useState(''); // Estado para el código
   const modalRef = useRef(null);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   const handleComprobarClick = async () => {
     if (email.trim() === '') {
       alert('Por favor, introduce tu email electrónico.');
-    } else {
-      const modal = new window.bootstrap.Modal(modalRef.current);
-      modal.show();
+      return;
     }
+
+    const modal = new window.bootstrap.Modal(modalRef.current);
+    modal.show();
+
     const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/sendEmail', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email })
-      });
-      if (!response.ok) {
-        
-        const errorData = await response.json();
-        console.log(errorData);
-        
-      }
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log(errorData);
+    }
+  };
+
+  const handleVerificarCodigo = async () => {
+    const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/checkCode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ verificationCode: codigo }),
+    });
+
+    if (response.status === 201) {
       navigate('/SignIn');
+    } else {
+      const data = await response.json();
+      alert(data.message || 'Código incorrecto. Inténtalo de nuevo.');
+    }
   };
 
   return (
     <>
       <nav className="navbar d-flex align-items-center justify-content-center">
-        <img src="./public/assets/img/logoFinal.png" alt="Logo" className="img-fluid" />
+        <img src="/assets/img/logoFinal.png" alt="Logo" className="img-fluid" />
       </nav>
 
       <div
@@ -88,8 +107,12 @@ const navigate = useNavigate();
                 type="text"
                 className="form-control mb-3"
                 placeholder="Código de verificación"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
               />
-              <button className="btn-confirmar w-100">Verificar código</button>
+              <button className="btn-confirmar w-100" onClick={handleVerificarCodigo}>
+                Verificar código
+              </button>
             </div>
           </div>
         </div>
