@@ -44,7 +44,7 @@ function Register() {
     <div>
       <nav className="navbar navbar-expand-lg w-100">
         <div className="container-fluid justify-content-center">
-          <img src="./public/assets/img/logoFinal.png" alt="Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
+          <img src="/assets/img/logoFinal.png" alt="Logo" className="img-fluid" style={{ maxWidth: '150px' }} />
         </div>
       </nav>
 

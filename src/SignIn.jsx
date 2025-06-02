@@ -54,36 +54,17 @@ function SignIn() {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg sticky-top">
-        <div className="container">
-          <a
-            className="navbar-brand logo-centered"
-            href="/"
-            aria-label="FitTrack Home"
-          >
-            <img src="/assets/img/logoFinal.png" alt="FitTrack" />
-          </a>
-
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarMenuSignIn"
-            aria-controls="navbarMenuSignIn"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          <div className="collapse navbar-collapse justify-content-end" id="navbarMenuSignIn">
-            <ul className="navbar-nav mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link active" to="/">
-                  Inicio
-                </Link>
-              </li>
-            </ul>
+      <nav className="navbar sticky-top custom-navbar">
+        <div className="container position-relative d-flex align-items-center justify-content-center">
+          <div className="logo-centered">
+            <a className="navbar-brand" href="/" aria-label="FitTrack Home">
+              <img src="/assets/img/logoFinal.png" alt="FitTrack" />
+            </a>
+          </div>
+          <div className="ms-auto">
+            <Link className="btn custom-btn" to="/">
+              Inicio
+            </Link>
           </div>
         </div>
       </nav>
