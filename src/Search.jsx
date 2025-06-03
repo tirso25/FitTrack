@@ -6,6 +6,7 @@ import { faSearch, faBookmark as solidBookmark } from "@fortawesome/free-solid-s
 import { faBookmark as regularBookmark } from "@fortawesome/free-regular-svg-icons";
 import { Link, useNavigate } from 'react-router-dom';
 import './Search.css';
+
 const categoryMap = {
   hombro: "SHOULDER",
   brazo: "ARM",
@@ -14,26 +15,23 @@ const categoryMap = {
   pierna: "LEG"
 };
 
-
 const Busqueda = () => {
   const [bookmarks, setBookmarks] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [filteredExercises, setFilteredExercises] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [coachs, setCoachs] = useState([]);
+  const [activeTab, setActiveTab] = useState("ejercicios"); // Nueva pestaña activa
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-
-
-
   useEffect(() => {
-    var rol = localStorage.getItem('rol');
-
-    if (rol != "ROLE_ADMIN" && rol != "ROLE_USER" && rol != "ROLE_COACH") {
+    const rol = localStorage.getItem('rol');
+    if (!["ROLE_ADMIN", "ROLE_USER", "ROLE_COACH"].includes(rol)) {
       alert("No estás registrado, si quieres buscar ejercicios, inicia sesión");
       navigate("/");
     }
+
     fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
       method: 'GET',
       credentials: 'include',
@@ -44,18 +42,20 @@ const Busqueda = () => {
     })
       .then(response => response.json())
       .then(data => {
-        if (data.type === 'error' || data.type === 'warning') {
-          console.error(data.message);
-        } else {
+        if (Array.isArray(data)) {
           setExercises(data);
           setBookmarks(new Array(data.length).fill(false));
+        } else {
+          console.warn('Respuesta inesperada:', data);
+          setExercises([]);
         }
       })
       .catch(error => {
         console.error('Error al obtener los ejercicios:', error);
+        setExercises([]);
       });
-
   }, []);
+
   useEffect(() => {
     fetch('https://fittrackapi-fmwr.onrender.com/api/coachs/seeAllCoachs', {
       method: 'GET',
@@ -65,14 +65,15 @@ const Busqueda = () => {
     })
       .then(res => res.json())
       .then(data => {
-        if (!Array.isArray(data)) {
-          console.warn(data.message);
-        } else {
+        if (Array.isArray(data)) {
           setCoachs(data);
+        } else {
+          console.warn(data.message);
         }
       })
       .catch(err => console.error('Error al obtener coachs:', err));
   }, []);
+
   const toggleBookmark = (index) => {
     const updated = [...bookmarks];
     updated[index] = !updated[index];
@@ -80,11 +81,11 @@ const Busqueda = () => {
   };
 
   const goToProfile = (coachId) => {
-    navigate(`/profile/${coachId}`);
+    navigate(`/profile?id=${coachId}`);
   };
+
   useEffect(() => {
     const search = searchTerm.toLowerCase().trim();
-
     const matchedCategories = Object.entries(categoryMap)
       .filter(([es]) => es.includes(search))
       .map(([, en]) => en);
@@ -92,17 +93,15 @@ const Busqueda = () => {
     const filtered = exercises.filter(exercise => {
       const nameLower = exercise.name.toLowerCase();
       const categoryLower = exercise.category.toLowerCase();
-
       const matchName = nameLower.includes(search);
-
-      const matchCategory = matchedCategories.some(cat => categoryLower.includes(cat.toLowerCase()));
-
+      const matchCategory = matchedCategories.some(cat =>
+        categoryLower.includes(cat.toLowerCase())
+      );
       return matchName || matchCategory;
     });
 
     setFilteredExercises(filtered);
   }, [searchTerm, exercises]);
-
 
   return (
     <>
@@ -122,53 +121,69 @@ const Busqueda = () => {
           <div className="collapse navbar-collapse justify-content-end" id="navbarMenu">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
+                <Link className="nav-link" to="/">Inicio</Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                <Link className="nav-link" to="/profile">Perfil</Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
+                <Link className="nav-link" to="/search">Búsqueda</Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                <Link className="nav-link" to="/admin">Administrador</Link>
               </li>
               <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
+                <Link className="nav-link" to="/signout">Salir</Link>
               </li>
             </ul>
           </div>
         </div>
       </nav>
 
-      <div className="container mt-4">
-        <div className="search-bar d-flex align-items-center gap-2">
-          <FontAwesomeIcon icon={faSearch} />
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Buscar por nombre o zona (hombro, brazo...)"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Pestañas para móvil */}
+      <div className="container d-block d-lg-none mt-3">
+        <div className="btn-group w-100">
+          <button
+            className={`btn btn-outline-primary ${activeTab === "ejercicios" ? "active" : ""}`}
+            onClick={() => setActiveTab("ejercicios")}
+          >
+            Ejercicios
+          </button>
+          <button
+            className={`btn btn-outline-primary ${activeTab === "coachs" ? "active" : ""}`}
+            onClick={() => setActiveTab("coachs")}
+          >
+            Entrenadores
+          </button>
         </div>
+      </div>
 
-        <div className="my-3">
-          {["Hombro", "Brazo", "Espalda", "Torso", "Pierna"].map((zona) => (
-            <button
-              key={zona}
-              className="filter-btn"
-              onClick={() => setSearchTerm(zona.toLowerCase())} // <- aquí asignas el filtro
-            >
-              {zona}
-            </button>
-          ))}
-        </div>
+      <div className="container mt-4 d-flex flex-column flex-lg-row gap-4">
+        {(activeTab === "ejercicios" || window.innerWidth >= 992) && (
+          <div className="flex-grow-1">
+            <div className="search-bar d-flex align-items-center gap-2 mb-3">
+              <FontAwesomeIcon icon={faSearch} />
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Buscar por nombre o zona (hombro, brazo...)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
+            <div className="mb-3">
+              {["Hombro", "Brazo", "Espalda", "Torso", "Pierna"].map((zona) => (
+                <button
+                  key={zona}
+                  className="filter-btn me-2 mb-2"
+                  onClick={() => setSearchTerm(zona.toLowerCase())}
+                >
+                  {zona}
+                </button>
+              ))}
+            </div>
 
-        <div className="row">
-          {/* Columna de ejercicios */}
-          <div className="col-lg-9">
             <div className="row">
               {filteredExercises.map((ex, i) => (
                 <div key={i} className="col-sm-6 col-md-4 col-lg-3 mb-4">
@@ -202,7 +217,6 @@ const Busqueda = () => {
                           ></i>
                         </div>
                       </div>
-
                       <div className="flip-card-back p-3">
                         <div className="row">
                           <div className="col-12 text-center">
@@ -218,10 +232,14 @@ const Busqueda = () => {
                   </div>
                 </div>
               ))}
+              {filteredExercises.length === 0 && (
+                <p className="text-muted">No se encontraron ejercicios.</p>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Columna de coachs */}
+        {(activeTab === "coachs" || window.innerWidth >= 992) && (
           <div className="col-lg-3">
             <h5 className="mb-3">Entrenadores</h5>
             <div className="d-flex flex-column gap-3">
@@ -239,8 +257,7 @@ const Busqueda = () => {
               ))}
             </div>
           </div>
-        </div>
-
+        )}
       </div>
     </>
   );
