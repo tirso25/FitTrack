@@ -42,12 +42,39 @@ function Index() {
     });
   };
 
-  const toggleBookmark = (index) => {
-    setBookmarks(prev => {
-      const newBookmarks = [...prev];
-      newBookmarks[index] = !newBookmarks[index];
-      return newBookmarks;
-    });
+  const toggleBookmark = async (index) => {
+    const exercise = exercises[index];
+    const isFavorited = bookmarks[index];
+    const urlBase = 'https://fittrackapi-fmwr.onrender.com/api/favoriteExercises';
+
+    try {
+      const response = await fetch(
+        `${urlBase}/${isFavorited ? 'undoFavorite' : 'addFavoriteExercise'}/${exercise.id_exe}`, 
+        {
+          method: isFavorited ? 'DELETE' : 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error al actualizar favorito:', errorData.message || response.statusText);
+        return;
+      }
+
+      setBookmarks(prev => {
+        const newBookmarks = [...prev];
+        newBookmarks[index] = !isFavorited;
+        return newBookmarks;
+      });
+
+    } catch (error) {
+      console.error('Error en la petición de favorito:', error);
+    }
   };
 
   return (
@@ -155,7 +182,7 @@ function Index() {
                     <i
                       className="fa-regular fa-eye float-end"
                       style={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/profile/${exercise.coach_id}`)}
+                      onClick={() => navigate(`/profile?id=${exercise.coach_id}`)}
                     ></i>
                     <hr />
                   </div>
