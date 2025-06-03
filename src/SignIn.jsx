@@ -35,16 +35,14 @@ function SignIn() {
      
 
       const data = await response.json();
-      console.log(data);
-      console.log(rememberme);
       
       if (data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('email' ,data.userData.this_user_email);
         localStorage.setItem('username' ,data.userData.this_user_username);
         localStorage.setItem('id' ,data.userData.this_user_id);
-        localStorage.setItem('rol', data.rol);
-        navigate('/profile');
+        localStorage.setItem('rol', data.userData.this_user_role);
+        navigate('/');
       } else {
         throw new Error('Token no recibido');
       }

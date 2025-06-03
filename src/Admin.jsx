@@ -8,12 +8,20 @@ const Admin = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
-console.log(usuarioSeleccionado);
-
   const navigate = useNavigate();
+
+
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    var rol = localStorage.getItem('rol');
+
+    if (rol != "ROLE_ADMIN") {
+      alert("No eres administrador.\n No deberias estar aquí.");
+      navigate("/");
+
+    }
     const obtenerUsuarios = async () => {
       try {
         const res = await fetch("https://fittrackapi-fmwr.onrender.com/api/users/seeAllUsers", {
@@ -27,7 +35,6 @@ console.log(usuarioSeleccionado);
         if (!res.ok) throw new Error("Fallo al obtener usuarios");
         const data = await res.json();
         setUsuarios(data);
-        console.log(data);
 
       } catch (error) {
         alert("Error al cargar usuarios: " + error.message);
@@ -50,8 +57,7 @@ console.log(usuarioSeleccionado);
       if (!res.ok) throw new Error("Error obteniendo datos del usuario");
       const data = await res.json();
       setUsuarioSeleccionado(data);
-      console.log(data);
-      
+
       setRolesDisponibles(data.roles);
       setModalVisible(true);
     } catch (err) {
@@ -200,7 +206,7 @@ console.log(usuarioSeleccionado);
                   <label>Rol</label>
                   <select
                     className="form-select"
-                    value={usuarioSeleccionado.role_id ||""}
+                    value={usuarioSeleccionado.role_id || ""}
                     onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, role_id: parseInt(e.target.value) })}
                   >
                     {rolesDisponibles.map((role) => (

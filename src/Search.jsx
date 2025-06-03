@@ -20,6 +20,7 @@ const Busqueda = () => {
   const [exercises, setExercises] = useState([]);
   const [filteredExercises, setFilteredExercises] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [coachs, setCoachs] = useState([]);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -27,6 +28,12 @@ const Busqueda = () => {
 
 
   useEffect(() => {
+    var rol = localStorage.getItem('rol');
+
+    if (rol != "ROLE_ADMIN" && rol != "ROLE_USER" && rol != "ROLE_COACH") {
+      alert("No estás registrado, si quieres buscar ejercicios, inicia sesión");
+      navigate("/");
+    }
     fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
       method: 'GET',
       credentials: 'include',
@@ -47,8 +54,25 @@ const Busqueda = () => {
       .catch(error => {
         console.error('Error al obtener los ejercicios:', error);
       });
-  }, []);
 
+  }, []);
+  useEffect(() => {
+    fetch('https://fittrackapi-fmwr.onrender.com/api/coachs/seeAllCoachs', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          console.warn(data.message);
+        } else {
+          setCoachs(data);
+        }
+      })
+      .catch(err => console.error('Error al obtener coachs:', err));
+  }, []);
   const toggleBookmark = (index) => {
     const updated = [...bookmarks];
     updated[index] = !updated[index];
@@ -141,55 +165,80 @@ const Busqueda = () => {
           ))}
         </div>
 
-        <div className="row">
-          {filteredExercises.map((ex, i) => (
-            <div key={i} className="col-sm-6 col-md-4 col-lg-3 mb-4">
-              <div
-                className="flip-card"
-                onClick={(e) => e.currentTarget.classList.toggle("flipped")}
-              >
-                <div className="flip-card-inner">
-                  <div className="flip-card-front">
-                    <div className="card-content text-center p-3">
-                      <p className="mb-0">
-                        <strong>{ex.name}</strong><br />
-                        <small>{ex.creator}</small>
-                      </p>
-                      <img src="/assets/img/abdominoplastia.png" className="exercise-img my-2" alt="ejercicio" />
-                      <FontAwesomeIcon
-                        icon={bookmarks[i] ? solidBookmark : regularBookmark}
-                        className={`bookmark ${bookmarks[i] ? "text-warning" : ""}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleBookmark(i);
-                        }}
-                      />
-                      <i
-                        className="fa-regular fa-eye float-end"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          goToProfile(ex.coach_id);
-                        }}
-                        style={{ cursor: "pointer", marginLeft: '10px' }}
-                      ></i>
-                    </div>
-                  </div>
 
-                  <div className="flip-card-back p-3">
-                    <div className="row">
-                      <div className="col-12 text-center">
-                        <p><strong>Recomendaciones:</strong><br />{ex.recommendations ?? 'Sin especificar'}</p>
+        <div className="row">
+          {/* Columna de ejercicios */}
+          <div className="col-lg-9">
+            <div className="row">
+              {filteredExercises.map((ex, i) => (
+                <div key={i} className="col-sm-6 col-md-4 col-lg-3 mb-4">
+                  <div
+                    className="flip-card"
+                    onClick={(e) => e.currentTarget.classList.toggle("flipped")}
+                  >
+                    <div className="flip-card-inner">
+                      <div className="flip-card-front">
+                        <div className="card-content text-center p-3">
+                          <p className="mb-0">
+                            <strong>{ex.name}</strong><br />
+                            <small>{ex.creator}</small>
+                          </p>
+                          <img src="/assets/img/abdominoplastia.png" className="exercise-img my-2" alt="ejercicio" />
+                          <FontAwesomeIcon
+                            icon={bookmarks[i] ? solidBookmark : regularBookmark}
+                            className={`bookmark ${bookmarks[i] ? "text-warning" : ""}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(i);
+                            }}
+                          />
+                          <i
+                            className="fa-regular fa-eye float-end"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goToProfile(ex.coach_id);
+                            }}
+                            style={{ cursor: "pointer", marginLeft: '10px' }}
+                          ></i>
+                        </div>
                       </div>
-                      <div className="col-12">
-                        <h6><strong>Descripción detallada:</strong></h6>
-                        <p>{ex.description}</p>
+
+                      <div className="flip-card-back p-3">
+                        <div className="row">
+                          <div className="col-12 text-center">
+                            <p><strong>Recomendaciones:</strong><br />{ex.recommendations ?? 'Sin especificar'}</p>
+                          </div>
+                          <div className="col-12">
+                            <h6><strong>Descripción detallada:</strong></h6>
+                            <p>{ex.description}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Columna de coachs */}
+          <div className="col-lg-3">
+            <h5 className="mb-3">Entrenadores</h5>
+            <div className="d-flex flex-column gap-3">
+              {coachs.map((coach, index) => (
+                <div key={index} className="card p-2">
+                  <h6 className="mb-1">{coach.username}</h6>
+                  <p className="mb-2 text-muted">{coach.description || "Sin descripción"}</p>
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => goToProfile(coach.id_ch)}
+                  >
+                    Ver perfil
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>
