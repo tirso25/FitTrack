@@ -36,6 +36,7 @@ function SignIn() {
 
       const data = await response.json();
       console.log(data);
+      console.log(rememberme);
       
       if (data.token) {
         localStorage.setItem('token', data.token);

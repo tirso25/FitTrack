@@ -9,7 +9,7 @@ const SignOut = () => {
   useEffect(() => {
     const signOut = async () => {
       const token = localStorage.getItem("token");
-
+      
       try {
         const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/signOut', {
           method: 'POST',

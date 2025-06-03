@@ -11,12 +11,11 @@ function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
+    fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllActiveExercises', {
       method: 'GET',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
       }
     })
       .then(response => response.json())

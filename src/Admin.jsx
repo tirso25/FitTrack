@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate,Link, useLocation  } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 import "./Admin.css";
 
@@ -8,6 +8,7 @@ const Admin = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
+console.log(usuarioSeleccionado);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -26,7 +27,7 @@ const Admin = () => {
         if (!res.ok) throw new Error("Fallo al obtener usuarios");
         const data = await res.json();
         setUsuarios(data);
-          console.log(data);
+        console.log(data);
 
       } catch (error) {
         alert("Error al cargar usuarios: " + error.message);
@@ -49,6 +50,7 @@ const Admin = () => {
       if (!res.ok) throw new Error("Error obteniendo datos del usuario");
       const data = await res.json();
       setUsuarioSeleccionado(data);
+      console.log(data);
       
       setRolesDisponibles(data.roles);
       setModalVisible(true);
@@ -88,33 +90,33 @@ const Admin = () => {
   return (
     <div className="admin-container">
       <nav className="navbar navbar-expand-lg sticky-top">
-          <div className="container-fluid">
-              <a className="navbar-brand mx-auto" href="#">
-                <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
-              </a>
-              <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
-                <span className="navbar-toggler-icon"></span>
-              </button>
-              <div className="collapse navbar-collapse justify-content-end" id="navbarMenu">
-                  <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-                      <li className="nav-item">
-                          <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
-                      </li>
-                      <li className="nav-item">
-                          <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
-                      </li>
-                      <li className="nav-item">
-                          <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
-                      </li>
-                      <li className="nav-item">
-                          <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-                      </li>
-                      <li className="nav-item">
-                          <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
-                      </li>
-                  </ul>
-                </div>
-              </div>
+        <div className="container-fluid">
+          <a className="navbar-brand mx-auto" href="#">
+            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" />
+          </a>
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse justify-content-end" id="navbarMenu">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+              </li>
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
+              </li>
+            </ul>
+          </div>
+        </div>
       </nav>
       <h1 className="text-center my-4">Panel de Administración</h1>
       <table className="table table-striped">
@@ -198,7 +200,7 @@ const Admin = () => {
                   <label>Rol</label>
                   <select
                     className="form-select"
-                    value={usuarioSeleccionado.role_id}
+                    value={usuarioSeleccionado.role_id ||""}
                     onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, role_id: parseInt(e.target.value) })}
                   >
                     {rolesDisponibles.map((role) => (
