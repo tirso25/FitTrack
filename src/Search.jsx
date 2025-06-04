@@ -24,6 +24,7 @@ const Busqueda = () => {
   const [activeTab, setActiveTab] = useState("ejercicios"); // Nueva pestaña activa
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const rol = localStorage.getItem('rol');
@@ -105,40 +106,41 @@ const Busqueda = () => {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg sticky-top">
-        <div className="container-fluid">
-          <a className="navbar-brand mx-auto" href="#">
-            <img src="./public/assets/img/logoFinal.png" alt="FitTrack" height="40" />
-          </a>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarMenu"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarMenu">
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link" to="/">Inicio</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/profile">Perfil</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/search">Búsqueda</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/admin">Administrador</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/signout">Salir</Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+      <nav className={`navbar navbar-expand-lg sticky-top ${menuOpen ? 'expanded' : ''}`}>
+              <div className="container-fluid">
+                <Link className="navbar-brand" to="/">
+                  <img src="/assets/img/logoFinal.png" alt="FitTrack" />
+                </Link>
+                <button
+                  className="navbar-toggler"
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  aria-expanded={menuOpen}
+                  aria-label="Toggle navigation"
+                >
+                  <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`} id="navbarMenu">
+                  <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </nav>
 
       {/* Pestañas para móvil */}
       <div className="container d-block d-lg-none mt-3">
