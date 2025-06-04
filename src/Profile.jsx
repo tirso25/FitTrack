@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Profile = () => {
   const location = useLocation();
@@ -10,27 +10,17 @@ const Profile = () => {
   const token = localStorage.getItem('token');
   const localUserId = localStorage.getItem('id');
   const isOwner = localUserId === profileId && !!token;
-  const navigate = useNavigate();
 
-
-
-
-  const [menuOpen, setMenuOpen] = useState(false);
   const [userData, setUserData] = useState(null);
-
-  const [exercises, setExercises] = useState([]);
-  const [bookmarks, setBookmarks] = useState([]);
-  const [detallesVisibles, setDetallesVisibles] = useState([]);
-
-  const [bookmarksCoaches, setBookmarksCoaches] = useState([]);
-  const [coachesWarning, setCoachesWarning] = useState(null);
-  const [exercisesWarning, setExercisesWarning] = useState(null);
-
-  const [creatingExercise, setCreatingExercise] = useState(false);
-
-  const [editMode, setEditMode] = useState(false);
   const [isCoach, setIsCoach] = useState(false);
-  const [user, setUser] = useState(null);
+  const [exercises, setExercises] = useState([]);
+  const [creatingExercise, setCreatingExercise] = useState(false);
+  const [detallesVisibles, setDetallesVisibles] = useState([]);
+  const [bookmarks, setBookmarks] = useState([true]);
+  const [editMode, setEditMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -41,97 +31,82 @@ const Profile = () => {
     role_id: 'ROLE_USER',
   });
 
-  useEffect(() => {
-    var rol = localStorage.getItem('rol');
+  // Estados para formulario de nuevo ejercicio
+  const [exerciseName, setExerciseName] = useState('');
+  const [exerciseDescription, setExerciseDescription] = useState('');
+  const [exerciseCategory, setExerciseCategory] = useState('');
 
-    if (rol != "ROLE_ADMIN" && rol != "ROLE_USER" && rol != "ROLE_COACH") {
-      alert("No estás registrado, si quieres ver tu perfil, inicia sesión");
-      navigate("/");
-    }
+  useEffect(() => {
     if (!profileId || !token) return;
 
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/seeOneUser/${profileId}`, {
+        const userRes = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/seeOneUser/${profileId}`, {
+          method: 'GET',
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
 
-        if (!response.ok) {
-          console.error("Error en la respuesta:", response.status);
-          throw new Error("Error al obtener datos del usuario");
+        if (!userRes.ok) throw new Error('Error al obtener datos del usuario');
+
+        const userDataArray = await userRes.json();
+        const user = userDataArray[0];
+        console.log(user);
+        setUserData(user);
+
+        const coachRes = await fetch('https://fittrackapi-fmwr.onrender.com/api/coachs/seeAllCoachs', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!coachRes.ok) throw new Error('Error al obtener la lista de coaches');
+
+        const coaches = await coachRes.json();
+
+        const coachIds = coaches.map(coach => coach.id_ch.toString());
+        const isUserCoach = coachIds.includes(profileId.toString());
+        setIsCoach(isUserCoach);
+
+        const userExercises = user.exercises || [];
+        setExercises(userExercises);
+        console.log(user.exercices);
+
+        if (user.id && profileId) {
+          const isProfileOwner = user.id === profileId.toString();
+
+              const initialBookmarks = isProfileOwner
+                ? user.exercises.map(() => true)  // Todos activos si es el mismo usuario
+                : user.exercises.map(() => false); // Ninguno activo si es otro usuario
+
+              setBookmarks(initialBookmarks);
         }
+        
+        setDetallesVisibles(Array(user.exercises.length).fill(false));
 
-        const data = await response.json();
-        // data es un array con un objeto con user + favoritos
-        setUserData(data[0]);
-
+        setFormData({
+          username: user.username || '',
+          email: user.email || '',
+          description: user.description || '',
+          password: '',
+          status: user.status || '',
+          public: user.public ?? true,
+          role_id: user.role || 'ROLE_USER',
+        });
       } catch (error) {
-        console.error("Error al obtener datos del usuario:", error);
+        console.error(error);
       }
     };
 
-    fetchUser();
-  }, [profileId, token]);
+    fetchData();
+  }, [profileId, token]); 
 
-  const isPublic = userData?.public ?? true;
-
-  // Procesar favoritos para ejercicios y coaches según esquema backend
-  useEffect(() => {
-    if (!userData) return;
-
-    const processFavorites = (favoritesArray) => {
-      if (!Array.isArray(favoritesArray) || favoritesArray.length === 0) {
-        return { items: [], warning: "This user has a private profile or no bookmarks" };
-      }
-      if (favoritesArray[0]?.type === 'warning') {
-        return { items: [], warning: favoritesArray[0].message };
-      }
-      const items = favoritesArray
-        .filter(fav => fav.type === 'success' && fav.message)
-        .map(fav => fav.message);
-      if (items.length === 0) {
-        return { items: [], warning: "This user has a private profile or no bookmarks" };
-      }
-      return { items, warning: null };
-    };
-
-    const { items: exercisesList, warning: exercisesWarn } = processFavorites(userData.exercisesFavorites);
-    const { items: coachesList, warning: coachesWarn } = processFavorites(userData.coachsFavorites);
-
-    setExercises(exercisesList);
-    setBookmarks(Array(exercisesList.length).fill(false));
-    setDetallesVisibles(Array(exercisesList.length).fill(false));
-
-    setBookmarksCoaches(coachesList);
-    setExercisesWarning(exercisesWarn);
-    setCoachesWarning(coachesWarn);
-
-  }, [userData]);
-
-  useEffect(() => {
-    if (userData?.role === 'ROLE_COACH') {
-      setIsCoach(true);
-    } else {
-      setIsCoach(false);
-    }
-  }, [userData]);
-
-  useEffect(() => {
-    if (userData) {
-      setFormData({
-        username: userData.username || '',
-        email: userData.email || '',
-        description: userData.description || '',
-        password: '',
-        status: userData.status || '',
-        public: userData.public ?? true,
-        role_id: userData.role || 'ROLE_USER',
-      });
-    }
-  }, [userData]);
 
   const toggleDetalles = i => setDetallesVisibles(prev => {
     const copy = [...prev];
@@ -146,6 +121,7 @@ const Profile = () => {
     try {
       const res = await fetch(url, {
         method: bookmarks[i] ? 'DELETE' : 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -163,6 +139,30 @@ const Profile = () => {
       console.error('Error al actualizar favoritos:', err);
     }
   };
+
+  const toggleFavorite = async () => {
+  try {
+    const method = isFavorite ? 'DELETE' : 'POST';
+    const url = isFavorite
+      ? `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/undoFavoritesCoachs/${profileId}`
+      : `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/addFavoritesCoachs/${profileId}`;
+
+    const res = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      setIsFavorite(!isFavorite);
+    } else {
+      console.error("Error al actualizar favoritos");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const handleChange = ({ target: { name, value, type, checked } }) => {
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
@@ -192,6 +192,7 @@ const Profile = () => {
     try {
       const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${profileId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -219,6 +220,93 @@ const Profile = () => {
       console.error('Error al actualizar perfil:', err);
     }
   };
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('https://fittrackapi-fmwr.onrender.com/api/categories/seeAllCategories', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        if (!res.ok) throw new Error('Error al cargar categorías');
+        const data = await res.json();
+        console.log(data)
+        setCategories(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCategories();
+  }, [token]);
+
+  function handleSubmitExercise(e) {
+    e.preventDefault();
+
+    const name = exerciseName.trim().toLowerCase();
+    const description = exerciseDescription.trim();
+    const category_id = parseInt(exerciseCategory, 10);
+
+    // Regex que coinciden con la validación del backend
+    const nameRegex = /^[a-z]{1,30}$/;
+    const descriptionRegex = /^[a-zA-Z0-9\s]{10,500}$/;
+
+    if (!nameRegex.test(name)) {
+      alert("El nombre debe tener solo letras minúsculas, sin espacios ni caracteres especiales, y hasta 30 caracteres.");
+      return;
+    }
+
+    if (!descriptionRegex.test(description) || description.length < 10 || description.length > 500) {
+      alert("La descripción debe tener entre 10 y 500 caracteres alfanuméricos.");
+      return;
+    }
+
+    if (isNaN(category_id) || category_id <= 0) {
+      alert("Selecciona una categoría válida.");
+      return;
+    }
+
+    const data = {
+      name,
+      description,
+      category_id
+    };
+
+    fetch("https://fittrackapi-fmwr.onrender.com/api/exercises/addExercise", {
+      method: "POST",
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    })
+    .then((res) => res.json())
+    .then((json) => {
+      if (json.type === "success") {
+        alert("Ejercicio creado correctamente");
+        // Resetea formulario
+        setExerciseName('');
+        setExerciseDescription('');
+        setExerciseCategory('');
+      } else {
+        alert(json.message || "Error al crear ejercicio");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Error de conexión con la API");
+    });
+  }
+
+  const isPublic = userData?.public ?? true;
+
 
   return (
     <>
@@ -258,197 +346,242 @@ const Profile = () => {
         </div>
       </nav>
 
-      {!isPublic && !isOwner ? (
-        <div className="container mt-5">
-          <div className="alert alert-warning text-center" role="alert">
-            <h3>Este perfil es privado y no puedes entrar a verlo</h3>
-          </div>
-        </div>
-      ) : (
-        <div className="container-fluid p-0">
-          <div className="row m-0">
-            <div className="sidebar">
-              {isOwner && (
-                <button
-                  className="btn btn-link position-absolute top-0 end-0 m-3 text-dark"
-                  title="Editar perfil"
-                  onClick={() => setEditMode(!editMode)}
-                  style={{ fontSize: '1.2rem' }}
-                >
-                  <i className="fa-solid fa-pen-to-square"></i>
-                </button>
-              )}
-
-              <img
-                src="/assets/img/usuario.png"
-                className="img-fluid rounded-circle my-3"
-                style={{ maxWidth: '120px' }}
-                alt="Usuario"
-              />
-
-              {editMode ? (
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-2">
-                    <label htmlFor="username" className="form-label"><strong>Usuario:</strong></label>
-                    <input
-                      type="text"
-                      id="username"
-                      name="username"
-                      className="form-control"
-                      value={formData.username}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label htmlFor="email" className="form-label"><strong>Email:</strong></label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="form-control"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label htmlFor="description" className="form-label"><strong>Descripción:</strong></label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      className="form-control"
-                      value={formData.description || ''}
-                      onChange={handleChange}
-                      rows="3"
-                    ></textarea>
-                  </div>
-                  <button type="submit" className="btn btn-primary btn-sm me-2">Guardar</button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => setEditMode(false)}
-                  >
-                    Cancelar
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <p><strong>{userData?.username || 'Usuario'}</strong></p>
-                  <p>{userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString() : ''}</p>
-                  <p>{userData?.email || ''}</p>
-                  <p>{userData?.description || ''}</p>
-                </>
-              )}
+      {userData ? (
+        !isPublic && !isOwner ? (
+          <div className="container mt-5">
+            <div className="alert alert-warning text-center" role="alert">
+              <h3>Este perfil es privado y no puedes entrar a verlo</h3>
             </div>
-
-            <div className="content-right">
-              {isOwner && isCoach && !creatingExercise && (
-                <div className="text-end me-3">
+          </div>
+        ) : (
+          <div className="container-fluid p-0">
+            <div className="row m-0">
+              <div className="sidebar">
+                {isOwner && (
                   <button
-                    className="btn btn-success my-3"
-                    onClick={() => setCreatingExercise(true)}
+                    className="btn btn-link position-absolute top-0 end-0 m-3 text-dark"
+                    title="Editar perfil"
+                    onClick={() => setEditMode(!editMode)}
+                    style={{ fontSize: '1.2rem' }}
                   >
-                    Crear Ejercicio
+                    <i className="fa-solid fa-pen-to-square"></i>
                   </button>
-                </div>
-              )}
+                )}
+                {isCoach && localUserId !== profileId && (
+                  <button className="btn-favorite btn btn-link position-absolute top-0 end-0 m-3 text-dark" onClick={toggleFavorite}>
+                    {isFavorite ? '⭐' : '☆'}
+                  </button>
+                )}
 
-              {creatingExercise ? (
-                <div className="container my-4">
-                  <h4>Nuevo Ejercicio</h4>
-                  <form className="card p-4 shadow-sm bg-light">
-                    <div className="mb-3">
-                      <label className="form-label">Nombre del ejercicio</label>
-                      <input type="text" className="form-control" placeholder="Ej: Sentadillas" />
+                <img
+                  src="/assets/img/usuario.png"
+                  className="img-fluid rounded-circle my-3"
+                  style={{ maxWidth: '120px' }}
+                  alt="Usuario"
+                />
+
+                {editMode ? (
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-2">
+                      <label htmlFor="username" className="form-label"><strong>Usuario:</strong></label>
+                      <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        className="form-control"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                      />
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label">Descripción</label>
-                      <textarea className="form-control" rows="3" placeholder="Describe el ejercicio..." />
+                    <div className="mb-2">
+                      <label htmlFor="email" className="form-label"><strong>Email:</strong></label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        className="form-control"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label">Categoría</label>
-                      <input type="text" className="form-control" placeholder="Ej: Piernas" />
+                    <div className="mb-2">
+                      <label htmlFor="description" className="form-label"><strong>Descripción:</strong></label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        className="form-control"
+                        value={formData.description || ''}
+                        onChange={handleChange}
+                        rows="3"
+                      ></textarea>
                     </div>
-                    <div className="d-flex justify-content-between">
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => setCreatingExercise(false)}
-                      >
-                        Cancelar
-                      </button>
-                      <button type="submit" className="btn btn-primary">Guardar</button>
-                    </div>
+                    <button type="submit" className="btn btn-primary btn-sm me-2">Guardar</button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setEditMode(false)}
+                    >
+                      Cancelar
+                    </button>
                   </form>
-                </div>
-              ) : exercises.length === 0 ? (
-                <div role="alert">
-                  Aún no hay ejercicios.
-                </div>
-              ) : (
-                exercises.map((exercise, index) => (
-                  <div key={exercise.id_exe} className="exercise-card p-3 border mb-3">
-                    <div className="d-flex justify-content-end gap-3">
-                      <i
-                        className={`fa-${bookmarks[index] ? 'solid' : 'regular'} fa-bookmark bookmark-toggle ${bookmarks[index] ? 'text-warning' : ''}`}
-                        onClick={() => toggleBookmark(index)}
-                        style={{ cursor: 'pointer' }}
-                      ></i>
-                      <i
-                        className={`fa-solid fa-caret-${detallesVisibles[index] ? 'up' : 'down'}`}
-                        onClick={() => toggleDetalles(index)}
-                        style={{ cursor: 'pointer' }}
-                      ></i>
-                    </div>
+                ) : (
+                  <>
+                    <p><strong>{userData.username}</strong></p>
+                    <p>{userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : ''}</p>
+                    <p>{userData.email}</p>
+                    <p>{userData.description}</p>
+                  </>
+                )}
+              </div>
 
-                    {!detallesVisibles[index] ? (
-                      <div className="exercise-summary mt-2">
-                        <div className="d-flex align-items-center">
-                          <img
-                            src="/assets/img/abdominoplastia.png"
-                            alt="ejercicio"
-                            className="exercise-img me-3"
-                            style={{ width: '80px' }}
-                          />
-                          <div>
-                            <strong>{exercise.name}</strong> por <strong>{exercise.creator}</strong><br />
-                            <small>{exercise.description}</small>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="exercise-summary mt-2">
-                        <div className="row mt-2">
-                          <div className="col-md-4 text-center">
-                            <img
-                              src="/assets/img/abdominoplastia.png"
-                              alt="Ejercicio"
-                              className="img-fluid mb-2"
-                              style={{ maxHeight: '120px' }}
-                            />
-                            <p><strong>Recomendaciones:</strong><br />Ejemplo: series, repeticiones, tips</p>
-                          </div>
-                          <div className="col-md-8">
-                            <h5>{exercise.name}</h5>
-                            <h6 className="text-muted">{exercise.creator}</h6>
-                            <p><strong>Descripción detallada:</strong></p>
-                            <ul>
-                              <li>{exercise.description}</li>
-                              <li>Músculo: {exercise.category}</li>
-                              <li>Likes: {exercise.likes}</li>
-                              <li>Fecha: {new Date(exercise.created_at).toLocaleDateString()}</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              <div className="content-right">
+                {isOwner && isCoach && !creatingExercise && (
+                  <div className="text-end me-3">
+                    <button
+                      className="btn btn-success my-3"
+                      onClick={() => setCreatingExercise(true)}
+                    >
+                      Crear Ejercicio
+                    </button>
                   </div>
-                ))
-              )}
-            </div>
+                )}
 
+                {creatingExercise && (
+                    <div className="container my-4">
+                      <h4>Nuevo Ejercicio</h4>
+                      <form className="card p-4 shadow-sm bg-light" onSubmit={handleSubmitExercise}>
+                        <div className="mb-3">
+                          <label htmlFor="exerciseName" className="form-label">Nombre</label>
+                          <input
+                            type="text"
+                            id="exerciseName"
+                            className="form-control"
+                            value={exerciseName}
+                            onChange={e => setExerciseName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="exerciseDescription" className="form-label">Descripción</label>
+                          <textarea
+                            id="exerciseDescription"
+                            className="form-control"
+                            rows="3"
+                            value={exerciseDescription}
+                            onChange={e => setExerciseDescription(e.target.value)}
+                            required
+                          ></textarea>
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="exerciseCategory" className="form-label">Categoría</label>
+                          <select
+                            value={exerciseCategory}
+                            onChange={e => setExerciseCategory(e.target.value)}
+                          >
+                            <option value="">Selecciona una categoría</option> 
+                            {categories.map(cat => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="d-flex justify-content-end">
+                          <button
+                            type="button"
+                            className="btn btn-secondary me-2"
+                            onClick={() => setCreatingExercise(false)}
+                          >
+                            Cancelar
+                          </button>
+                          <button type="submit" className="btn btn-primary">Crear</button>
+                        </div>
+                      </form>
+                    </div>
+                )}
+
+                {!creatingExercise && (
+                  exercises.length === 0 ? (
+                    <div role="alert">
+                      Aún no hay ejercicios.
+                    </div>
+                  ) : (
+                    exercises.map((exercise, index) => (
+                      <div key={exercise.id_exe} className="exercise-card p-3 border mb-3">
+                        <div className="d-flex justify-content-end gap-3">
+                          <i
+                            className={`bi bi-bookmark${bookmarks[index] ? '-fill text-warning' : ''}`}
+                            onClick={() => toggleBookmark(index)}
+                            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+                            title="Marcar como favorito"
+                          ></i>
+
+                          <i
+                            className={`fa-solid fa-caret-${detallesVisibles[index] ? 'up' : 'down'}`}
+                            onClick={() => toggleDetalles(index)}
+                            style={{ cursor: 'pointer' }}
+                            aria-label={detallesVisibles[index] ? 'Ocultar detalles' : 'Mostrar detalles'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter') toggleDetalles(index) }}
+                          ></i>
+                        </div>
+
+                        {!detallesVisibles[index] ? (
+                          <div className="exercise-summary mt-2">
+                            <div className="d-flex align-items-center">
+                              <img
+                                src="/assets/img/abdominoplastia.png"
+                                alt="ejercicio"
+                                className="exercise-img me-3"
+                                style={{ width: '80px' }}
+                              />
+                              <div>
+                                <strong>{exercise.exercise_name}</strong><br />
+                                <small>{exercise.exercise_description}</small>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="exercise-summary mt-2">
+                            <div className="row mt-2">
+                              <div className="col-md-4 text-center">
+                                <img
+                                  src="/assets/img/abdominoplastia.png"
+                                  alt="Ejercicio"
+                                  className="img-fluid mb-2"
+                                  style={{ maxHeight: '120px' }}
+                                />
+                                <p><strong>Recomendaciones:</strong><br />Ejemplo: series, repeticiones, tips</p>
+                              </div>
+                              <div className="col-md-8">
+                                <h5>{exercise.name}</h5>
+                                <h6 className="text-muted">{exercise.creator}</h6>
+                                <p><strong>Descripción detallada:</strong></p>
+                                <ul>
+                                  <li>{exercise.exercise_description}</li>
+                                  <li>Músculo: {exercise.exercise_category}</li>
+                                  <li>Likes: {exercise.exercise_likes}</li>
+                                  <li>Fecha: {new Date(exercise.exercise_created_at).toLocaleDateString()}</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )
+                )}
+              </div>
+            </div>
           </div>
+        )
+      ) : (
+        <div className="text-center p-3">
+          <div className="spinner-border text-primary" role="status" />
+          <p className="mt-2">Cargando perfil...</p>
         </div>
       )}
     </>
