@@ -160,6 +160,15 @@ html, body, #root {
   color: #1e2a19;
 }
 
+.btn-favorite {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: gold;
+}
+
+
 @media (max-width: 991px) {
   .sidebar {
     position: static;
