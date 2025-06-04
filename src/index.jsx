@@ -63,7 +63,7 @@ function Index() {
 
     try {
       const response = await fetch(
-        `${urlBase}/${isFavorited ? 'undoFavorite' : 'addFavoriteExercise'}/${exercise.id_exe}`,
+        `${urlBase}/${isFavorited ? 'undoFavorite' : 'addFavoriteExercise'}/${exercise.id_exe}`, 
         {
           method: isFavorited ? 'DELETE' : 'POST',
           credentials: 'include',
@@ -94,40 +94,62 @@ function Index() {
   return (
     <>
       <nav className={`navbar navbar-expand-lg sticky-top ${menuOpen ? 'expanded' : ''}`}>
-              <div className="container-fluid">
-                <Link className="navbar-brand" to="/">
-                  <img src="/assets/img/logoFinal.png" alt="FitTrack" />
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/">
+            <img src="/assets/img/logoFinal.png" alt="FitTrack" />
+          </Link>
+          <button
+            className="navbar-toggler"
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`} id="navbarMenu">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">
+                  Inicio
                 </Link>
-                <button
-                  className="navbar-toggler"
-                  type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  aria-expanded={menuOpen}
-                  aria-label="Toggle navigation"
-                >
-                  <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className={`collapse navbar-collapse ${menuOpen ? 'show' : ''}`} id="navbarMenu">
-                  <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </nav>
+              </li>
+
+              {isLoggedIn ? (
+                <>
+                  <li className="nav-item">
+                    <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">
+                      Perfil
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">
+                      Búsqueda
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">
+                      Administrador
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">
+                      Salir
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/SignIn" onClick={toggleLogin}>
+                    Iniciar sesión
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      </nav>
 
 
       <div className="container mt-5">
