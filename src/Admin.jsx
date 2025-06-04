@@ -1,65 +1,131 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-
-import "./Admin.css";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import DataTable from "react-data-table-component";
+import './Admin.css';
 
 const Admin = () => {
   const [usuarios, setUsuarios] = useState([]);
+  const [showExercises, setShowExercises] = useState(false);
+  const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
+  const [ejercicios, setEjercicios] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   const token = localStorage.getItem("token");
 
+  // Filtrado dinámico según si mostramos ejercicios o usuarios
+  const filteredUsuarios = usuarios.filter((user) =>
+    Object.values(user).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const filteredEjercicios = ejercicios.filter((ejercicio) =>
+    Object.values(ejercicio).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  
+
   useEffect(() => {
-    var rol = localStorage.getItem('rol');
+    const rol = localStorage.getItem("rol");
 
-    if (rol != "ROLE_ADMIN") {
-      alert("No eres administrador.\n No deberias estar aquí.");
-      navigate("/");
-
+    if (rol !== "ROLE_ADMIN") {
+      alert("No eres administrador.\nNo deberías estar aquí.");
+      return navigate("/");
     }
-    const obtenerUsuarios = async () => {
+
+    const obtenerDatos = async () => {
       try {
-        const res = await fetch("https://fittrackapi-fmwr.onrender.com/api/users/seeAllUsers", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // Obtener usuarios
+        const resUsuarios = await fetch(
+          "https://fittrackapi-fmwr.onrender.com/api/users/seeAllUsers",
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!resUsuarios.ok) throw new Error("Fallo al obtener usuarios");
+        const dataUsuarios = await resUsuarios.json();
+        setUsuarios(dataUsuarios);
 
-        if (!res.ok) throw new Error("Fallo al obtener usuarios");
-        const data = await res.json();
-        setUsuarios(data);
-
+        // Obtener ejercicios
+        const resEjercicios = await fetch(
+          "https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises",
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!resEjercicios.ok) throw new Error("Fallo al obtener ejercicios");
+        const dataEjercicios = await resEjercicios.json();
+        setEjercicios(dataEjercicios);
       } catch (error) {
-        alert("Error al cargar usuarios: " + error.message);
+        console.error("Error al cargar datos:", error);
+        alert("Error al cargar datos: " + error.message);
       }
     };
 
-    obtenerUsuarios();
+    obtenerDatos();
+  }, [token, navigate]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('https://fittrackapi-fmwr.onrender.com/api/categories/seeAllCategories', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        if (!res.ok) throw new Error('Error al cargar categorías');
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCategories();
   }, [token]);
 
   const abrirModalModificar = async (id) => {
     try {
-      const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Error obteniendo datos del usuario");
       const data = await res.json();
       setUsuarioSeleccionado(data);
-
-      setRolesDisponibles(data.roles);
+      setRolesDisponibles(data.roles || []);
+      setEjercicioSeleccionado(null);
       setModalVisible(true);
     } catch (err) {
       alert("Error al cargar datos: " + err.message);
@@ -68,34 +134,188 @@ const Admin = () => {
 
   const guardarCambiosUsuario = async () => {
     try {
-      const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${usuarioSeleccionado.id_usr}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          username: usuarioSeleccionado.username,
-          description: usuarioSeleccionado.description,
-          status: usuarioSeleccionado.status,
-          role_id: usuarioSeleccionado.role_id,
-          public: usuarioSeleccionado.public,
-          password: usuarioSeleccionado.password,
-        }),
-      });
+      const payload = {
+        username: usuarioSeleccionado.username,
+        description: usuarioSeleccionado.description,
+        status: usuarioSeleccionado.status,
+        role_id: usuarioSeleccionado.role_id,
+        public: usuarioSeleccionado.public,
+      };
+
+      if (usuarioSeleccionado.password?.trim()) {
+        payload.password = usuarioSeleccionado.password;
+      }
+
+      const res = await fetch(
+        `https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${usuarioSeleccionado.id_usr}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Error al guardar cambios");
+
       alert(result.message);
       setModalVisible(false);
-      window.location.reload();
+      setUsuarioSeleccionado(null);
+
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id_usr === usuarioSeleccionado.id_usr ? { ...u, ...payload } : u
+        )
+      );
     } catch (err) {
       alert("Error: " + err.message);
     }
   };
 
+  const abrirModalModificarEjercicio = async (id) => {
+    try {
+      const res = await fetch(
+        `https://fittrackapi-fmwr.onrender.com/api/exercises/seeOneExercise/${id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Error obteniendo datos del ejercicio");
+      const data = await res.json();
+
+      setEjercicioSeleccionado(data[0]);
+      setUsuarioSeleccionado(null);
+      setModalVisible(true);
+    } catch (err) {
+      alert("Error al cargar el ejercicio: " + err.message);
+    }
+  };
+
+
+  const guardarCambiosEjercicio = async () => {
+    try {
+      const res = await fetch(
+        `https://fittrackapi-fmwr.onrender.com/api/exercises/modifyExercise/${ejercicioSeleccionado.id_exe}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: ejercicioSeleccionado.name,
+            description: ejercicioSeleccionado.description,
+            category: ejercicioSeleccionado.category,
+            coach_id: ejercicioSeleccionado.coach_id,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Error al modificar ejercicio");
+
+      const data = await res.json();
+      console.log("Ejercicio modificado:", data);
+      setShowModalEdit(false);
+      obtenerEjercicios(); // recargar la lista
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+  const columnsEjercicios = [
+    {
+      name: "Nombre",
+      selector: (row) => row.name,
+      sortable: true,
+    },
+    {
+      name: "Categoría",
+      selector: (row) => row.category,
+      sortable: true,
+    },
+    {
+      name: "Creador",
+      selector: (row) => row.creator,
+      sortable: true,
+    },
+    {
+      name: "Likes",
+      selector: (row) => row.likes,
+      sortable: true,
+    },
+    {
+      name: "Fecha de creación",
+      selector: (row) =>
+        new Date(row.created_at).toLocaleDateString("es-ES"),
+      sortable: true,
+    },
+    {
+      name: "Acciones",
+      cell: (row) => (
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => abrirModalModificarEjercicio(row.id_exe)}
+        >
+          Modificar
+        </button>
+      ),
+    },
+  ];
+
+  const columnsUsuarios = [
+    {
+      name: "ID",
+      selector: (row) => row.id_usr,
+      sortable: true,
+      width: "70px",
+    },
+    {
+      name: "Username",
+      selector: (row) => row.username,
+      sortable: true,
+    },
+    {
+      name: "Email",
+      selector: (row) => row.email,
+      sortable: true,
+    },
+    {
+      name: "Rol",
+      selector: (row) => row.role,
+      sortable: true,
+    },
+    {
+      name: "Estado",
+      selector: (row) => row.status,
+      sortable: true,
+    },
+    {
+      name: "Acciones",
+      cell: (row) => (
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => abrirModalModificar(row.id_usr)}
+        >
+          Modificar
+        </button>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+
   return (
-    <div className="admin-container">
+      <>
+      {/* NAVBAR */}
       <nav className={`navbar navbar-expand-lg sticky-top ${menuOpen ? 'expanded' : ''}`}>
               <div className="container-fluid">
                 <Link className="navbar-brand" to="/">
@@ -131,115 +351,300 @@ const Admin = () => {
                 </div>
               </div>
             </nav>
-      <h1 className="text-center my-4">Panel de Administración</h1>
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((user) => (
-            <tr key={user.id_usr}>
-              <td>{user.id_usr}</td>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-              <td>{user.status}</td>
-              <td>
-                <button className="btn btn-primary btn-sm" onClick={() => abrirModalModificar(user.id_usr)}>
-                  Modificar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
 
-      {modalVisible && usuarioSeleccionado && (
-        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog" role="document">
-            <div className="modal-content p-3">
-              <div className="modal-header">
-                <h5 className="modal-title">Modificar Usuario</h5>
-                <button type="button" className="btn-close" onClick={() => setModalVisible(false)} />
-              </div>
-              <div className="modal-body">
-                <div className="mb-2">
-                  <label>Email (no editable)</label>
-                  <input className="form-control" value={usuarioSeleccionado.email} disabled />
+      {/* Contenido principal */}
+      <div class="container my-4">
+        <div class="shadow-box">
+          {/* Toggle Usuarios/Ejercicios */}
+          <h1>Panel de control</h1>
+          <br />
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <button
+              className={`btn btn-${showExercises ? "secondary" : "primary"}`}
+              onClick={() => {
+                setShowExercises(false);
+                setSearchTerm("");
+              }}
+            >
+              Usuarios
+            </button>
+            <button
+              className={`btn btn-${showExercises ? "primary" : "secondary"}`}
+              onClick={() => {
+                setShowExercises(true);
+                setSearchTerm("");
+              }}
+            >
+              Ejercicios
+            </button>
+
+            {/* Buscador */}
+            <input
+              type="text"
+              className="form-control w-50"
+              placeholder={`Buscar en ${showExercises ? "Ejercicios" : "Usuarios"}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Tabla */}
+          {showExercises ? (
+            <DataTable
+              columns={columnsEjercicios}
+              data={filteredEjercicios}
+              pagination
+              highlightOnHover
+              striped
+              persistTableHead
+            />
+          ) : (
+            <DataTable
+              columns={columnsUsuarios}
+              data={filteredUsuarios}
+              pagination
+              highlightOnHover
+              striped
+              persistTableHead
+            />
+          )}
+
+          {/* Modal único para usuario o ejercicio */}
+          {modalVisible && (
+            <div className="modal show d-block" tabIndex="-1" role="dialog">
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      {usuarioSeleccionado ? "Modificar Usuario" : "Modificar Ejercicio"}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      aria-label="Cerrar"
+                      onClick={() => {
+                        setModalVisible(false);
+                        setUsuarioSeleccionado(null);
+                        setEjercicioSeleccionado(null);
+                      }}
+                    />
+                  </div>
+                  <div className="modal-body">
+                    {usuarioSeleccionado && (
+                      <>
+                        <div className="mb-3">
+                          <label htmlFor="username" className="form-label">
+                            Username
+                          </label>
+                          <input
+                            type="text"
+                            id="username"
+                            className="form-control"
+                            value={usuarioSeleccionado.username || ""}
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                username: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="description" className="form-label">
+                            Descripción
+                          </label>
+                          <textarea
+                            id="description"
+                            className="form-control"
+                            rows="3"
+                            value={usuarioSeleccionado.description || ""}
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                description: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="status" className="form-label">
+                            Estado
+                          </label>
+                          <select
+                            id="status"
+                            className="form-select"
+                            value={usuarioSeleccionado.status || ""}
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                status: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                          </select>
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="role" className="form-label">
+                            Rol
+                          </label>
+                          <select
+                            id="role"
+                            className="form-select"
+                            value={usuarioSeleccionado.role_id || ""}
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                role_id: e.target.value,
+                              })
+                            }
+                          >
+                            {rolesDisponibles.map((rol) => (
+                              <option key={rol.id} value={rol.id}>
+                                {rol.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="public" className="form-label">
+                            Público
+                          </label>
+                          <select
+                            id="public"
+                            className="form-select"
+                            value={usuarioSeleccionado.public ? "true" : "false"}
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                public: e.target.value === "true",
+                              })
+                            }
+                          >
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                          </select>
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="password" className="form-label">
+                            Contraseña (solo si quieres cambiarla)
+                          </label>
+                          <input
+                            type="password"
+                            id="password"
+                            className="form-control"
+                            onChange={(e) =>
+                              setUsuarioSeleccionado({
+                                ...usuarioSeleccionado,
+                                password: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {modalVisible && ejercicioSeleccionado && (
+                      <>
+                        <div className="mb-3">
+                          <label htmlFor="name" className="form-label">
+                            Nombre
+                          </label>
+                          <input
+                            type="text"
+                            id="name"
+                            className="form-control"
+                            value={ejercicioSeleccionado.name || ""}
+                            onChange={(e) =>
+                              setEjercicioSeleccionado({
+                                ...ejercicioSeleccionado,
+                                name: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label htmlFor="description" className="form-label">
+                            Descripción
+                          </label>
+                          <textarea
+                            id="description"
+                            className="form-control"
+                            rows="3"
+                            value={ejercicioSeleccionado.description || ""}
+                            onChange={(e) =>
+                              setEjercicioSeleccionado({
+                                ...ejercicioSeleccionado,
+                                description: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <select
+                            id="category"
+                            className="form-control"
+                            value={ejercicioSeleccionado?.category || ""}
+                            onChange={(e) =>
+                              setEjercicioSeleccionado({
+                                ...ejercicioSeleccionado,
+                                category: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Selecciona una categoría</option> 
+                              {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setModalVisible(false);
+                        setUsuarioSeleccionado(null);
+                        setEjercicioSeleccionado(null);
+                      }}
+                    >
+                      Cancelar
+                    </button>
+
+                    {usuarioSeleccionado && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={guardarCambiosUsuario}
+                      >
+                        Guardar cambios
+                      </button>
+                    )}
+
+                    {ejercicioSeleccionado && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={guardarCambiosEjercicio}
+                      >
+                        Guardar cambios
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="mb-2">
-                  <label>Nombre de usuario</label>
-                  <input
-                    className="form-control"
-                    value={usuarioSeleccionado.username}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, username: e.target.value })}
-                  />
-                </div>
-                <div className="mb-2">
-                  <label>Contraseña</label>
-                  <input
-                    className="form-control"
-                    placeholder="Deja el campo vacío si no quieres modificar la contraseña"
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, password: e.target.value })}
-                  />
-                </div>
-                <div className="mb-2">
-                  <label>Descripción</label>
-                  <textarea
-                    className="form-control"
-                    value={usuarioSeleccionado.description || ""}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, description: e.target.value })}
-                  />
-                </div>
-                <div className="mb-2">
-                  <label>Estado</label>
-                  <select
-                    className="form-select"
-                    value={usuarioSeleccionado.status}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, status: e.target.value })}
-                  >
-                    <option value="active">Activo</option>
-                    <option value="deleted">Eliminado</option>
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <label>Rol</label>
-                  <select
-                    className="form-select"
-                    value={usuarioSeleccionado.role_id || ""}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, role_id: parseInt(e.target.value) })}
-                  >
-                    {rolesDisponibles.map((role) => (
-                      <option key={role.id} value={role.id}>{role.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-check mb-3">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={usuarioSeleccionado.public}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, public: e.target.checked })}
-                  />
-                  <label className="form-check-label">Perfil público</label>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-primary" onClick={guardarCambiosUsuario}>Guardar</button>
-                <button className="btn btn-secondary" onClick={() => setModalVisible(false)}>Cancelar</button>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+      </>
   );
 };
 
