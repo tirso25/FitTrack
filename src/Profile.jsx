@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation,useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const Profile = () => {
   const token = localStorage.getItem('token');
   const localUserId = localStorage.getItem('id');
   const isOwner = localUserId === profileId && !!token;
-
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [isCoach, setIsCoach] = useState(false);
   const [exercises, setExercises] = useState([]);
@@ -37,8 +37,12 @@ const Profile = () => {
   const [exerciseCategory, setExerciseCategory] = useState('');
 
   useEffect(() => {
-    if (!profileId || !token) return;
-
+    if (!profileId || !token) {
+      alert("No estás registrado, si quieres ver algún perfil, inicia sesión");
+      navigate("/");
+      return
+    };
+    
     const fetchData = async () => {
       try {
         const userRes = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/seeOneUser/${profileId}`, {
