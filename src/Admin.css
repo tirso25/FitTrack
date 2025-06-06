@@ -12,7 +12,6 @@ body {
 }
     .navbar {
   background-color: #caffa4;
-  width: 100vw;
   margin: 0;
   padding: 0;
   position: relative;
@@ -104,40 +103,39 @@ body {
   color: red;
 }
 
-.switch-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+.btn-toggle {
+  background-color: #e0ffd0;
+  border: 2px solid #a1f57a;
+  color: #1d2b10;
+  padding: 8px 16px;
+  margin-right: 10px;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-#switchVista.form-check-input:checked {
-  background-color: #6dbe43 !important; 
-  border-color: #ced4da !important;
-  background-image: none !important; 
+.btn-toggle:hover {
+  background-color: #caffa4;
 }
-#switchVista.form-check-input {
-  border-radius: 1rem;
+
+.btn-toggle.active {
   background-color: #6dbe43;
-  border: 1px solid #ced4da;
-  width: 2.5em;
-  height: 1.4em;
+  color: white;
+  border-color: #6dbe43;
+}
+
+.btn-edit {
+  background-color: #a1f57a;
+  border: none;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-#switchVista.form-check-input::before {
-  content: "";
-  position: relative;
-  display: block;
-  width: 1em;
-  height: 1em;
-  background: #1d2b10;
-  border-radius: 50%;
-  top: 0.15em;
-  left: 0.2em;
-  transition: transform 0.3s ease;
+.btn-edit:hover {
+  background-color: #6dbe43;
+  color: white;
 }
-
-#switchVista.form-check-input:checked::before {
-  transform: translateX(1em);
-}
-
