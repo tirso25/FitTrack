@@ -22,7 +22,7 @@ const Busqueda = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [erroresApi, setErroresApi] = useState("");
   const [coachs, setCoachs] = useState([]);
-  const [activeTab, setActiveTab] = useState("ejercicios"); // Nueva pestaña activa
+  const [activeTab, setActiveTab] = useState("ejercicios"); 
   const token = localStorage.getItem("token");
   const rol = localStorage.getItem("rol");
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const Busqueda = () => {
     }
     setErroresApi("");
 
-    fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
+    fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllActiveExercises', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -70,6 +70,7 @@ const Busqueda = () => {
     })
       .then(res => res.json())
       .then(data => {
+        console.log(data);
         if (Array.isArray(data)) {
           setCoachs(data);
         } else {
@@ -152,15 +153,15 @@ const Busqueda = () => {
 
       {/* Pestañas para móvil */}
       <div className="container d-block d-lg-none mt-3">
-        <div className="btn-group w-100">
+        <div className="tab-buttons-container w-100">
           <button
-            className={`btn btn-outline-primary ${activeTab === "ejercicios" ? "active" : ""}`}
+            className={`tab-button ${activeTab === "ejercicios" ? "active" : ""}`}
             onClick={() => setActiveTab("ejercicios")}
           >
             Ejercicios
           </button>
           <button
-            className={`btn btn-outline-primary ${activeTab === "coachs" ? "active" : ""}`}
+            className={`tab-button ${activeTab === "coachs" ? "active" : ""}`}
             onClick={() => setActiveTab("coachs")}
           >
             Entrenadores
@@ -202,7 +203,7 @@ const Busqueda = () => {
 
             <div className="row">
               {filteredExercises.map((ex, i) => (
-                <div key={i} className="col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div key={ex.id_exe} className="col-sm-6 col-md-4 col-lg-3 mb-4">
                   <div
                     className="flip-card"
                     onClick={(e) => e.currentTarget.classList.toggle("flipped")}
