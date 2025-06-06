@@ -20,6 +20,7 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const token = localStorage.getItem("token");
+  const rol = localStorage.getItem("rol");
 
   // Filtrado dinámico según si mostramos ejercicios o usuarios
   const filteredUsuarios = usuarios.filter((user) =>
