@@ -92,13 +92,6 @@ function SignIn() {
                 required
               />
             </div>
-            <div className="mb-3">
-              Mantener la sesión iniciada
-              <input
-                type="checkbox"
-                onChange={(e) => setRememberme(e.target.value)}
-              />
-            </div>
             {error && (
               <div className="alert alert-danger text-center" role="alert">
                 {error}
@@ -107,6 +100,14 @@ function SignIn() {
             <button type="submit" className="btn custom-btn w-100">
               Iniciar sesión
             </button>
+            <div className="mb-3">
+              <br />
+              Mantener la sesión iniciada &nbsp;
+              <input
+                type="checkbox"
+                onChange={(e) => setRememberme(e.target.value)}
+              />
+            </div>
           </form>
           <div className="mt-4 text-center">
             <Link to="/register" className="link-register">
