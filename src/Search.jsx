@@ -24,6 +24,7 @@ const Busqueda = () => {
   const [coachs, setCoachs] = useState([]);
   const [activeTab, setActiveTab] = useState("ejercicios"); // Nueva pestaña activa
   const token = localStorage.getItem("token");
+  const rol = localStorage.getItem("rol");
   const navigate = useNavigate();
    const [menuOpen, setMenuOpen] = useState(false);
 
