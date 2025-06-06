@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link, useLocation,useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Profile = () => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const Profile = () => {
   const token = localStorage.getItem('token');
   const localUserId = localStorage.getItem('id');
   const isOwner = localUserId === profileId && !!token;
-  const navigate = useNavigate();
+
   const [userData, setUserData] = useState(null);
   const [isCoach, setIsCoach] = useState(false);
   const [exercises, setExercises] = useState([]);
@@ -21,6 +21,7 @@ const Profile = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [erroresApi, setErroresApi] = useState("");
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -37,13 +38,10 @@ const Profile = () => {
   const [exerciseCategory, setExerciseCategory] = useState('');
 
   useEffect(() => {
-    if (!profileId || !token) {
-      alert("No estás registrado, si quieres ver algún perfil, inicia sesión");
-      navigate("/");
-      return
-    };
-    
+    if (!profileId || !token) return;
+
     const fetchData = async () => {
+      setErroresApi("");
       try {
         const userRes = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/seeOneUser/${profileId}`, {
           method: 'GET',
@@ -58,7 +56,8 @@ const Profile = () => {
 
         const userDataArray = await userRes.json();
         const user = userDataArray[0];
-        console.log(user);
+
+
         setUserData(user);
 
         const coachRes = await fetch('https://fittrackapi-fmwr.onrender.com/api/coachs/seeAllCoachs', {
@@ -80,7 +79,6 @@ const Profile = () => {
 
         const userExercises = user.exercises || [];
         setExercises(userExercises);
-        console.log(user.exercices);
 
         if (user.id && profileId) {
           const isProfileOwner = user.id === profileId.toString();
@@ -104,7 +102,7 @@ const Profile = () => {
           role_id: user.role || 'ROLE_USER',
         });
       } catch (error) {
-        console.error(error);
+        setErroresApi(error);
       }
     };
 
@@ -120,11 +118,16 @@ const Profile = () => {
 
   const toggleBookmark = async (i) => {
     const exe = exercises[i];
-    const url = `https://fittrackapi-fmwr.onrender.com/api/favoriteExercises/${bookmarks[i] ? 'undoFavorite' : 'addFavoriteExercise'}/${exe.id_exe}`;
+    const addUrl = `https://fittrackapi-fmwr.onrender.com/api/favoriteExercises/addFavoriteExercise/${exe.id_exe}`;
+    const removeUrl = `https://fittrackapi-fmwr.onrender.com/api/favoriteExercises/undoFavorite/${exe.id_exe}`;
+    setErroresApi("");
 
     try {
+      const method = bookmarks[i] ? 'DELETE' : 'POST';
+      const url = bookmarks[i] ? removeUrl : addUrl;
+
       const res = await fetch(url, {
-        method: bookmarks[i] ? 'DELETE' : 'POST',
+        method,
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -132,40 +135,94 @@ const Profile = () => {
         }
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      // Si la petición fue exitosa, actualizamos el estado
+      if (res.ok) {
+        setBookmarks(prev => {
+          const updated = [...prev];
+          updated[i] = !updated[i];
+          return updated;
+        });
+      } else {
+        const data = await res.json();
 
-      setBookmarks(prev => {
-        const updated = [...prev];
-        updated[i] = !updated[i];
-        return updated;
-      });
+        // Si el ejercicio ya estaba en favoritos, lo quitamos
+        if (data.message?.includes('already added to favorite')) {
+          const undoRes = await fetch(removeUrl, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (undoRes.ok) {
+            setBookmarks(prev => {
+              const updated = [...prev];
+              updated[i] = false;
+              return updated;
+            });
+          } else {
+            setErroresApi('Error al eliminar favorito tras conflicto:', await undoRes.text());
+          }
+        } else {
+          setErroresApi('Error al actualizar favoritos:', data);
+        }
+      }
     } catch (err) {
-      console.error('Error al actualizar favoritos:', err);
+      setErroresApi('Error inesperado al actualizar favoritos:', err);
     }
   };
 
+
   const toggleFavorite = async () => {
-  try {
-    const method = isFavorite ? 'DELETE' : 'POST';
-    const url = isFavorite
-      ? `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/undoFavoritesCoachs/${profileId}`
-      : `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/addFavoritesCoachs/${profileId}`;
+    setErroresApi("");
+    try {
+      // Intentar agregar favorito (POST)
+      const urlAdd = `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/addFavoritesCoachs/${profileId}`;
+      let res = await fetch(urlAdd, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-    const res = await fetch(url, {
-      method,
-      credentials: 'include',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      if (res.ok) {
+        // Agregado correctamente
+        setIsFavorite(true);
+      } else {
+        // Leer mensaje de error
+        const errorData = await res.json().catch(() => null);
 
-    if (res.ok) {
-      setIsFavorite(!isFavorite);
-    } else {
-      console.error("Error al actualizar favoritos");
+        // Si es error de favorito ya agregado, hacer DELETE para quitar
+        if (errorData?.message === 'Coach already added to favorite') {
+          const urlDelete = `https://fittrackapi-fmwr.onrender.com/api/favoriteCoachs/undoFavoritesCoachs/${profileId}`;
+          const resDelete = await fetch(urlDelete, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (resDelete.ok) {
+            setIsFavorite(false);
+          } else {
+            const deleteError = await resDelete.text();
+            setErroresApi('Error al quitar favorito:', deleteError);
+          }
+        } else {
+          setErroresApi('Error al agregar favorito:', errorData ?? await res.text());
+        }
+      }
+    } catch (err) {
+      setErroresApi('Error en toggleFavorite:', err);
     }
-  } catch (err) {
-    console.error(err);
-  }
-};
+  };
+
 
 
   const handleChange = ({ target: { name, value, type, checked } }) => {
@@ -192,7 +249,7 @@ const Profile = () => {
     };
 
     if (formData.password?.trim()) body.password = formData.password.trim();
-
+      setErroresApi("");
     try {
       const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${profileId}`, {
         method: 'PUT',
@@ -221,7 +278,7 @@ const Profile = () => {
       alert("Perfil actualizado correctamente");
       window.location.reload();
     } catch (err) {
-      console.error('Error al actualizar perfil:', err);
+      setErroresApi('Error al actualizar perfil:', err);
     }
   };
 
@@ -240,10 +297,9 @@ const Profile = () => {
         });
         if (!res.ok) throw new Error('Error al cargar categorías');
         const data = await res.json();
-        console.log(data)
         setCategories(data);
       } catch (err) {
-        console.error(err);
+        setErroresApi(err);
       }
     };
 
@@ -262,17 +318,17 @@ const Profile = () => {
     const descriptionRegex = /^[a-zA-Z0-9\s]{10,500}$/;
 
     if (!nameRegex.test(name)) {
-      alert("El nombre debe tener solo letras minúsculas, sin espacios ni caracteres especiales, y hasta 30 caracteres.");
+      setErroresApi("El nombre debe tener solo letras minúsculas, sin espacios ni caracteres especiales, y hasta 30 caracteres.");
       return;
     }
 
     if (!descriptionRegex.test(description) || description.length < 10 || description.length > 500) {
-      alert("La descripción debe tener entre 10 y 500 caracteres alfanuméricos.");
+      setErroresApi("La descripción debe tener entre 10 y 500 caracteres alfanuméricos.");
       return;
     }
 
     if (isNaN(category_id) || category_id <= 0) {
-      alert("Selecciona una categoría válida.");
+      setErroresApi("Selecciona una categoría válida.");
       return;
     }
 
@@ -281,6 +337,7 @@ const Profile = () => {
       description,
       category_id
     };
+    setErroresApi("");
 
     fetch("https://fittrackapi-fmwr.onrender.com/api/exercises/addExercise", {
       method: "POST",
@@ -304,8 +361,7 @@ const Profile = () => {
       }
     })
     .catch((err) => {
-      console.error(err);
-      alert("Error de conexión con la API");
+      setErroresApi(err);
     });
   }
 
@@ -333,15 +389,19 @@ const Profile = () => {
               <li className="nav-item">
                 <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
-              </li>
+              {rol !== 'ROLE_ADMIN' && (
+                <li className="nav-item">
+                  <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                </li>
+              )}
               <li className="nav-item">
                 <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
               </li>
-              <li className="nav-item">
-                <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-              </li>
+              {rol === 'ROLE_ADMIN' && (
+                <li className="nav-item">
+                  <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                </li>
+              )}
               <li className="nav-item">
                 <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
               </li>
@@ -372,7 +432,7 @@ const Profile = () => {
                   </button>
                 )}
                 {isCoach && localUserId !== profileId && (
-                  <button className="btn-favorite btn btn-link position-absolute top-0 end-0 m-3 text-dark" onClick={toggleFavorite}>
+                  <button className="btn-favorite position-absolute top-0 end-0 m-3" onClick={toggleFavorite}>
                     {isFavorite ? '⭐' : '☆'}
                   </button>
                 )}
@@ -387,6 +447,11 @@ const Profile = () => {
                 {editMode ? (
                   <form onSubmit={handleSubmit}>
                     <div className="mb-2">
+                      {erroresApi && (
+                        <div className="alert alert-danger" role="alert">
+                          {erroresApi}
+                        </div>
+                      )}
                       <label htmlFor="username" className="form-label"><strong>Usuario:</strong></label>
                       <input
                         type="text"
