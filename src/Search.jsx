@@ -20,6 +20,7 @@ const Busqueda = () => {
   const [exercises, setExercises] = useState([]);
   const [filteredExercises, setFilteredExercises] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [erroresApi, setErroresApi] = useState("");
   const [coachs, setCoachs] = useState([]);
   const [activeTab, setActiveTab] = useState("ejercicios"); // Nueva pestaña activa
   const token = localStorage.getItem("token");
@@ -32,6 +33,7 @@ const Busqueda = () => {
       alert("No estás registrado, si quieres buscar ejercicios, inicia sesión");
       navigate("/");
     }
+    setErroresApi("");
 
     fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllExercises', {
       method: 'GET',
@@ -52,12 +54,13 @@ const Busqueda = () => {
         }
       })
       .catch(error => {
-        console.error('Error al obtener los ejercicios:', error);
+        setErroresApi('Error al obtener los ejercicios:', error);
         setExercises([]);
       });
   }, []);
 
   useEffect(() => {
+    setErroresApi("");
     fetch('https://fittrackapi-fmwr.onrender.com/api/coachs/seeAllCoachs', {
       method: 'GET',
       headers: {
@@ -72,7 +75,7 @@ const Busqueda = () => {
           console.warn(data.message);
         }
       })
-      .catch(err => console.error('Error al obtener coachs:', err));
+      .catch(err => setErroresApi('Error al obtener coachs:', err));
   }, []);
 
   const toggleBookmark = (index) => {
@@ -125,15 +128,19 @@ const Busqueda = () => {
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
                     </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
-                    </li>
+                    {rol !== 'ROLE_ADMIN' && (
+                      <li className="nav-item">
+                        <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                      </li>
+                    )}
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
                     </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-                    </li>
+                    {rol === 'ROLE_ADMIN' && (
+                      <li className="nav-item">
+                        <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                      </li>
+                    )}
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
                     </li>
@@ -161,8 +168,14 @@ const Busqueda = () => {
       </div>
 
       <div className="container mt-4 d-flex flex-column flex-lg-row gap-4">
+        {erroresApi && (
+          <div className="alert alert-danger" role="alert">
+            {erroresApi}
+          </div>
+        )}
         {(activeTab === "ejercicios" || window.innerWidth >= 992) && (
           <div className="flex-grow-1">
+            <h1>Ejercicios</h1>
             <div className="search-bar d-flex align-items-center gap-2 mb-3">
               <FontAwesomeIcon icon={faSearch} />
               <input
@@ -246,11 +259,13 @@ const Busqueda = () => {
             <h5 className="mb-3">Entrenadores</h5>
             <div className="d-flex flex-column gap-3">
               {coachs.map((coach, index) => (
-                <div key={index} className="card p-2">
-                  <h6 className="mb-1">{coach.username}</h6>
-                  <p className="mb-2 text-muted">{coach.description || "Sin descripción"}</p>
+                <div key={index} className="card p-3 shadow-sm rounded">
+                  <h6 className="mb-2">{coach.username}</h6>
+                  <p className="mb-3 text-muted" style={{ minHeight: "48px" }}>
+                    {coach.description || "Sin descripción"}
+                  </p>
                   <button
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-custom-outline"
                     onClick={() => goToProfile(coach.id_ch)}
                   >
                     Ver perfil
