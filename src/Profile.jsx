@@ -8,8 +8,8 @@ const Profile = () => {
   const queryParams = new URLSearchParams(location.search);
   const profileId = queryParams.get('id') || localStorage.getItem('id');
   const token = localStorage.getItem('token');
-  const rol = localStorage.getItem("rol");
   const localUserId = localStorage.getItem('id');
+  const rol = localStorage.getItem("rol");
   const isOwner = localUserId === profileId && !!token;
 
   const [userData, setUserData] = useState(null);
@@ -448,11 +448,6 @@ const Profile = () => {
                 {editMode ? (
                   <form onSubmit={handleSubmit}>
                     <div className="mb-2">
-                      {erroresApi && (
-                        <div className="alert alert-danger" role="alert">
-                          {erroresApi}
-                        </div>
-                      )}
                       <label htmlFor="username" className="form-label"><strong>Usuario:</strong></label>
                       <input
                         type="text"
@@ -507,6 +502,11 @@ const Profile = () => {
               </div>
 
               <div className="content-right">
+                {erroresApi && (
+                        <div className="alert alert-danger" role="alert">
+                          {erroresApi}
+                        </div>
+                      )}
                 {isOwner && isCoach && !creatingExercise && (
                   <div className="text-end me-3">
                     <button
