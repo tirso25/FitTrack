@@ -74,7 +74,7 @@ function SignIn() {
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <input
-                type="email"
+                type="text"
                 className="form-control"
                 placeholder="Correo electrónico o nombre de usuario"
                 value={email}
