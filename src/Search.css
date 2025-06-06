@@ -123,3 +123,25 @@
       border-color: #3b6a2a;
       box-shadow: 0 0 8px rgba(59, 106, 42, 0.5);
     }
+.tab-button {
+      color: #3b6a2a;
+      border: 2px solid #3b6a2a;
+      background-color: transparent;
+      border-radius: 8px;
+      padding: 6px 16px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      margin-right: 8px;
+    }
+
+    .tab-button.active {
+      background-color: #3b6a2a;
+      color: white;
+      box-shadow: 0 0 8px rgba(59, 106, 42, 0.5);
+    }
+
+    .tab-buttons-container {
+      display: flex;
+      justify-content: center; 
+      gap: 10px;              
+      margin-top: 20px;        
+    }
