@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './EmailCheck.css';
 
-export default function EmailCheck() {
+const EmailCheck = () => {
   const location = useLocation();
   const emailInicial = location.state?.email || '';
   const [email, setEmail] = useState(emailInicial);
@@ -120,3 +120,5 @@ export default function EmailCheck() {
     </>
   );
 }
+
+export default EmailCheck;
