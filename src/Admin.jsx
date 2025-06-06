@@ -12,6 +12,7 @@ const Admin = () => {
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
   const [ejercicios, setEjercicios] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [erroresApi, setErroresApi] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,6 +90,7 @@ const Admin = () => {
     if (!token) return;
 
     const fetchCategories = async () => {
+      setErroresApi("");
       try {
         const res = await fetch('https://fittrackapi-fmwr.onrender.com/api/categories/seeAllCategories', {
           method: 'GET',
@@ -102,7 +104,7 @@ const Admin = () => {
         const data = await res.json();
         setCategories(data);
       } catch (err) {
-        console.error(err);
+        setErroresApi("Error al guardar cambios: " + err.message);
       }
     };
 
@@ -110,6 +112,7 @@ const Admin = () => {
   }, [token]);
 
   const abrirModalModificar = async (id) => {
+    setErroresApi("");
     try {
       const res = await fetch(
         `https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${id}`,
@@ -128,11 +131,12 @@ const Admin = () => {
       setEjercicioSeleccionado(null);
       setModalVisible(true);
     } catch (err) {
-      alert("Error al cargar datos: " + err.message);
+      setErroresApi("Error al guardar cambios: " + err.message);
     }
   };
 
   const guardarCambiosUsuario = async () => {
+    setErroresApi("");
     try {
       const payload = {
         username: usuarioSeleccionado.username,
@@ -171,11 +175,12 @@ const Admin = () => {
         )
       );
     } catch (err) {
-      alert("Error: " + err.message);
+      setErroresApi("Error al guardar cambios: " + err.message);
     }
   };
 
   const abrirModalModificarEjercicio = async (id) => {
+    setErroresApi("");
     try {
       const res = await fetch(
         `https://fittrackapi-fmwr.onrender.com/api/exercises/seeOneExercise/${id}`,
@@ -194,13 +199,26 @@ const Admin = () => {
       setUsuarioSeleccionado(null);
       setModalVisible(true);
     } catch (err) {
-      alert("Error al cargar el ejercicio: " + err.message);
+      setErroresApi("Error al guardar cambios: " + err.message);
     }
   };
 
-
   const guardarCambiosEjercicio = async () => {
+    setErroresApi("");
     try {
+      const payload = {
+        name: ejercicioSeleccionado.name,
+        description: ejercicioSeleccionado.description,
+        category_id: parseInt(ejercicioSeleccionado.category), 
+        coach_id: ejercicioSeleccionado.coach_id,
+        active:
+          ejercicioSeleccionado.active === true ||
+          ejercicioSeleccionado.active === "true" ||
+          ejercicioSeleccionado.active === 1
+            ? 1
+            : 0, 
+      };
+
       const res = await fetch(
         `https://fittrackapi-fmwr.onrender.com/api/exercises/modifyExercise/${ejercicioSeleccionado.id_exe}`,
         {
@@ -209,23 +227,36 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name: ejercicioSeleccionado.name,
-            description: ejercicioSeleccionado.description,
-            category: ejercicioSeleccionado.category,
-            coach_id: ejercicioSeleccionado.coach_id,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
-      if (!res.ok) throw new Error("Error al modificar ejercicio");
+      console.log("Payload enviado:", payload); 
+
+      if (!res.ok) {
+        const errorText = await res.text(); 
+        console.error("Respuesta del servidor:", errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.message || errorText);
+        } catch {
+          throw new Error(errorText);
+        }
+      }
 
       const data = await res.json();
       console.log("Ejercicio modificado:", data);
       setShowModalEdit(false);
       obtenerEjercicios(); // recargar la lista
     } catch (err) {
-      console.error(err);
+        let mensaje = err.message;
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed && parsed.message) {
+            mensaje = parsed.message;
+          }
+        } catch {}
+        setErroresApi("Error al guardar cambios: " + mensaje);
     }
   };
 
@@ -261,7 +292,7 @@ const Admin = () => {
       name: "Acciones",
       cell: (row) => (
         <button
-          className="btn btn-primary btn-sm"
+          className="btn-edit"
           onClick={() => abrirModalModificarEjercicio(row.id_exe)}
         >
           Modificar
@@ -301,7 +332,7 @@ const Admin = () => {
       name: "Acciones",
       cell: (row) => (
         <button
-          className="btn btn-primary btn-sm"
+          className="btn-edit"
           onClick={() => abrirModalModificar(row.id_usr)}
         >
           Modificar
@@ -335,15 +366,19 @@ const Admin = () => {
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/" ? "active" : ""}`} to="/">Inicio</Link>
                     </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
-                    </li>
+                    {rol !== 'ROLE_ADMIN' && (
+                      <li className="nav-item">
+                        <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                      </li>
+                    )}
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">Búsqueda</Link>
                     </li>
-                    <li className="nav-item">
-                      <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
-                    </li>
+                    {rol === 'ROLE_ADMIN' && (
+                      <li className="nav-item">
+                        <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                      </li>
+                    )}
                     <li className="nav-item">
                       <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">Salir</Link>
                     </li>
@@ -353,14 +388,14 @@ const Admin = () => {
             </nav>
 
       {/* Contenido principal */}
-      <div class="container my-4">
-        <div class="shadow-box">
+      <div className="container my-4">
+        <div className="shadow-box">
           {/* Toggle Usuarios/Ejercicios */}
           <h1>Panel de control</h1>
           <br />
           <div className="d-flex justify-content-between align-items-center mb-3">
             <button
-              className={`btn btn-${showExercises ? "secondary" : "primary"}`}
+              className={`btn-toggle ${!showExercises ? "active" : ""}`}
               onClick={() => {
                 setShowExercises(false);
                 setSearchTerm("");
@@ -369,7 +404,7 @@ const Admin = () => {
               Usuarios
             </button>
             <button
-              className={`btn btn-${showExercises ? "primary" : "secondary"}`}
+              className={`btn-toggle ${showExercises ? "active" : ""}`}
               onClick={() => {
                 setShowExercises(true);
                 setSearchTerm("");
@@ -416,7 +451,7 @@ const Admin = () => {
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title">
-                      {usuarioSeleccionado ? "Modificar Usuario" : "Modificar Ejercicio"}
+                      {modalVisible &&  usuarioSeleccionado ? "Modificar Usuario" : "Modificar Ejercicio"}
                     </h5>
                     <button
                       type="button"
@@ -604,7 +639,11 @@ const Admin = () => {
                       </>
                     )}
                   </div>
-
+                    {erroresApi && (
+                      <div className="alert alert-danger" role="alert">
+                        {erroresApi}
+                      </div>
+                    )}
                   <div className="modal-footer">
                     <button
                       type="button"
