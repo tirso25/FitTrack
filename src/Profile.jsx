@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import './Profile.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, useLocation } from 'react-router-dom';
@@ -41,6 +41,23 @@ const Profile = () => {
   useEffect(() => {
     if (!profileId || !token) return;
 
+    const normalizeExercisesUniversal = (array = []) => {
+      return array.map(item => {
+        const isFavorite = item.message !== undefined;
+        const data = isFavorite ? item.message : item;
+
+        return {
+          id_exe: data.id_exe || data.exercise_id || data.id || null,
+          exercise_name: data.name_exe || data.exercise_name || '',
+          exercise_description: data.description_exe || data.exercise_description || '',
+          exercise_category: data.category_exe || data.exercise_category || '',
+          exercise_likes: data.likes_exe ?? data.exercise_likes ?? 0,
+          exercise_created_at: data.exercise_created_at || null,
+          creator: data.creator || null
+        };
+      });
+    };
+
     const fetchData = async () => {
       setErroresApi("");
       try {
@@ -57,7 +74,7 @@ const Profile = () => {
 
         const userDataArray = await userRes.json();
         const user = userDataArray[0];
-
+        console.log(user);
 
         setUserData(user);
 
@@ -78,20 +95,22 @@ const Profile = () => {
         const isUserCoach = coachIds.includes(profileId.toString());
         setIsCoach(isUserCoach);
 
-        const userExercises = user.exercises || [];
-        setExercises(userExercises);
+        const rawExercises = user.exercises || [];
+        const rawFavorites = user.exercisesFavorites || [];
+
+        const normalizedExercises = normalizeExercisesUniversal(rawExercises);
+        const normalizedFavorites = normalizeExercisesUniversal(rawFavorites);
+
+        const allExercises = [...normalizedExercises, ...normalizedFavorites];
+        setExercises(allExercises);
 
         if (user.id && profileId) {
           const isProfileOwner = user.id === profileId.toString();
-
-              const initialBookmarks = isProfileOwner
-                ? user.exercises.map(() => true)  // Todos activos si es el mismo usuario
-                : user.exercises.map(() => false); // Ninguno activo si es otro usuario
-
-              setBookmarks(initialBookmarks);
+          const initialBookmarks = allExercises.map(() => isProfileOwner);
+          setBookmarks(initialBookmarks);
         }
-        
-        setDetallesVisibles(Array(user.exercises.length).fill(false));
+
+        setDetallesVisibles(Array(allExercises.length).fill(false));
 
         setFormData({
           username: user.username || '',
@@ -103,13 +122,26 @@ const Profile = () => {
           role_id: user.role || 'ROLE_USER',
         });
       } catch (error) {
-        setErroresApi(error);
+        setErroresApi(error.message || String(error));
       }
     };
 
     fetchData();
-  }, [profileId, token]); 
+  }, [profileId, token]);
 
+  const normalizedExercises = (exercises || []).map(item => {
+    const exercise = item.message || item; // si viene con mensaje (favorito), usar ese objeto
+
+    return {
+      id_exe: exercise.id_exe,
+      exercise_name: exercise.exercise_name || exercise.name_exe,
+      exercise_description: exercise.exercise_description || exercise.description_exe,
+      exercise_category: exercise.exercise_category || exercise.category_exe,
+      exercise_likes: exercise.exercise_likes ?? exercise.likes_exe,
+      exercise_created_at: exercise.exercise_created_at || exercise.created_at_exe || exercise.created_at || null,
+      creator: exercise.creator || null,
+    };
+  });
 
   const toggleDetalles = i => setDetallesVisibles(prev => {
     const copy = [...prev];
@@ -284,7 +316,7 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || rol !== 'ROLE_COACH') return;
 
     const fetchCategories = async () => {
       try {
@@ -300,7 +332,7 @@ const Profile = () => {
         const data = await res.json();
         setCategories(data);
       } catch (err) {
-        setErroresApi(err);
+        setErroresApi('Error al actualizar perfil: ' + (err.message || String(err)));
       }
     };
 
@@ -362,7 +394,7 @@ const Profile = () => {
       }
     })
     .catch((err) => {
-      setErroresApi(err);
+      setErroresApi('Error al crear ejercicio: ' + (err.message || String(err)));
     });
   }
 
@@ -482,7 +514,7 @@ const Profile = () => {
                         rows="3"
                       ></textarea>
                     </div>
-                    <button type="submit" className="btn btn-primary btn-sm me-2">Guardar</button>
+                    <button type="submit" className="btn-edit me-2">Guardar</button>
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
@@ -546,9 +578,12 @@ const Profile = () => {
                         </div>
                         <div className="mb-3">
                           <label htmlFor="exerciseCategory" className="form-label">Categoría</label>
-                          <select
+                           <select
+                            id="exerciseCategory"
+                            className="form-control"
                             value={exerciseCategory}
                             onChange={e => setExerciseCategory(e.target.value)}
+                            required
                           >
                             <option value="">Selecciona una categoría</option> 
                             {categories.map(cat => (
@@ -566,7 +601,7 @@ const Profile = () => {
                           >
                             Cancelar
                           </button>
-                          <button type="submit" className="btn btn-primary">Crear</button>
+                          <button type="submit" className="btn-edit">Crear</button>
                         </div>
                       </form>
                     </div>
@@ -578,7 +613,7 @@ const Profile = () => {
                       Aún no hay ejercicios.
                     </div>
                   ) : (
-                    exercises.map((exercise, index) => (
+                    normalizedExercises.map((exercise, index) => (
                       <div key={exercise.id_exe} className="exercise-card p-3 border mb-3">
                         <div className="d-flex justify-content-end gap-3">
                           <i
