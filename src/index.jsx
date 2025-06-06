@@ -8,13 +8,15 @@ function Index() {
   const [detallesVisibles, setDetallesVisibles] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [erroresApi, setErroresApi] = useState("");
   const email = localStorage.getItem('email');
   const token = localStorage.getItem("token");
+  const rol = localStorage.getItem("rol");
   const navigate = useNavigate();
 
   const toggleLogin = () => {
-  setIsLoggedIn(prev => !prev);
-};
+    setIsLoggedIn(prev => !prev);
+  };
 
   useEffect(() => {
     if (token) {
@@ -25,6 +27,7 @@ function Index() {
   }, [token]);
 
   useEffect(() => {
+    setErroresApi("");
     fetch('https://fittrackapi-fmwr.onrender.com/api/exercises/seeAllActiveExercises', {
       method: 'GET',
       credentials: 'include',
@@ -39,11 +42,11 @@ function Index() {
           setDetallesVisibles(Array(data.length).fill(false));
           setBookmarks(Array(data.length).fill(false));
         } else {
-          console.error(data.message);
+          setErroresApi(data.message);
         }
       })
       .catch(error => {
-        console.error('Error al obtener los ejercicios:', error);
+        setErroresApi('Error al obtener los ejercicios:', error);
       });
   }, []);
 
@@ -56,38 +59,61 @@ function Index() {
     });
   };
 
-  const toggleBookmark = async (index) => {
-    const exercise = exercises[index];
-    const isFavorited = bookmarks[index];
-    const urlBase = 'https://fittrackapi-fmwr.onrender.com/api/favoriteExercises';
+  const toggleBookmark = async (i) => {
+    const exe = exercises[i];
+    const addUrl = `https://fittrackapi-fmwr.onrender.com/api/favoriteExercises/addFavoriteExercise/${exe.id_exe}`;
+    const removeUrl = `https://fittrackapi-fmwr.onrender.com/api/favoriteExercises/undoFavorite/${exe.id_exe}`;
+    setErroresApi("");
 
     try {
-      const response = await fetch(
-        `${urlBase}/${isFavorited ? 'undoFavorite' : 'addFavoriteExercise'}/${exercise.id_exe}`, 
-        {
-          method: isFavorited ? 'DELETE' : 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+      const method = bookmarks[i] ? 'DELETE' : 'POST';
+      const url = bookmarks[i] ? removeUrl : addUrl;
+
+      const res = await fetch(url, {
+        method,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error al actualizar favorito:', errorData.message || response.statusText);
-        return;
-      }
-
-      setBookmarks(prev => {
-        const newBookmarks = [...prev];
-        newBookmarks[index] = !isFavorited;
-        return newBookmarks;
       });
 
-    } catch (error) {
-      console.error('Error en la petición de favorito:', error);
+      // Si la petición fue exitosa, actualizamos el estado
+      if (res.ok) {
+        setBookmarks(prev => {
+          const updated = [...prev];
+          updated[i] = !updated[i];
+          return updated;
+        });
+      } else {
+        const data = await res.json();
+
+        // Si el ejercicio ya estaba en favoritos, lo quitamos
+        if (data.message?.includes('already added to favorite')) {
+          const undoRes = await fetch(removeUrl, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (undoRes.ok) {
+            setBookmarks(prev => {
+              const updated = [...prev];
+              updated[i] = false;
+              return updated;
+            });
+          } else {
+            setErroresApi('Error al eliminar favorito tras conflicto:', await undoRes.text());
+          }
+        } else {
+          setErroresApi('Error al actualizar favoritos:', data);
+        }
+      }
+    } catch (err) {
+      setErroresApi('Error inesperado al actualizar favoritos:', err);
     }
   };
 
@@ -118,21 +144,21 @@ function Index() {
 
               {isLoggedIn ? (
                 <>
-                  <li className="nav-item">
-                    <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">
-                      Perfil
-                    </Link>
-                  </li>
+                  {rol !== 'ROLE_ADMIN' && (
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`} to="/profile">Perfil</Link>
+                    </li>
+                  )}
                   <li className="nav-item">
                     <Link className={`nav-link ${location.pathname === "/search" ? "active" : ""}`} to="/search">
                       Búsqueda
                     </Link>
                   </li>
-                  <li className="nav-item">
-                    <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">
-                      Administrador
-                    </Link>
-                  </li>
+                  {rol === 'ROLE_ADMIN' && (
+                    <li className="nav-item">
+                      <Link className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} to="/admin">Administrador</Link>
+                    </li>
+                  )}
                   <li className="nav-item">
                     <Link className={`nav-link ${location.pathname === "/signout" ? "active" : ""}`} to="/signout">
                       Salir
@@ -155,6 +181,11 @@ function Index() {
       <div className="container mt-5">
         <div className="row">
           <div className="col-lg-8">
+            {erroresApi && (
+              <div className="alert alert-danger" role="alert">
+                {erroresApi}
+              </div>
+            )}
             <h3 className="text-center mb-4">Nuevos ejercicios</h3>
 
             {exercises.map((exercise, index) => (
