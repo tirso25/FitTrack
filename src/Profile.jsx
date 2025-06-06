@@ -8,6 +8,7 @@ const Profile = () => {
   const queryParams = new URLSearchParams(location.search);
   const profileId = queryParams.get('id') || localStorage.getItem('id');
   const token = localStorage.getItem('token');
+  const rol = localStorage.getItem("rol");
   const localUserId = localStorage.getItem('id');
   const isOwner = localUserId === profileId && !!token;
 
