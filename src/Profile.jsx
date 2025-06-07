@@ -74,7 +74,7 @@ const Profile = () => {
 
         const userDataArray = await userRes.json();
         const user = userDataArray[0];
-        console.log(user);
+        console.log(userDataArray);
 
         setUserData(user);
 
@@ -536,6 +536,8 @@ const Profile = () => {
                     <p>{userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : ''}</p>
                     <p>{userData.email}</p>
                     <p>{userData.description}</p>
+                    {userData.likes !== undefined && <p>Likes: {userData.likes}</p>}
+
                   </>
                 )}
               </div>
