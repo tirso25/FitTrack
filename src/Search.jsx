@@ -47,6 +47,8 @@ const Busqueda = () => {
       .then(response => response.json())
       .then(data => {
         if (Array.isArray(data)) {
+          console.log(data);
+          
           setExercises(data);
           setBookmarks(new Array(data.length).fill(false));
         } else {
@@ -213,7 +215,8 @@ const Busqueda = () => {
                         <div className="card-content text-center p-3">
                           <p className="mb-0">
                             <strong>{ex.name}</strong><br />
-                            <small>{ex.creator}</small>
+                            <small>{ex.creator}</small><br />
+                            <small>Likes : {ex.likes}</small>
                           </p>
                           <img src="/assets/img/abdominoplastia.png" className="exercise-img my-2" alt="ejercicio" />
                           <FontAwesomeIcon
@@ -262,10 +265,13 @@ const Busqueda = () => {
             <div className="d-flex flex-column gap-3">
               {coachs.map((coach, index) => (
                 <div key={index} className="card p-3 shadow-sm rounded">
-                  <h6 className="mb-2">{coach.username}</h6>
-                  <p className="mb-3 text-muted" style={{ minHeight: "48px" }}>
-                    {coach.description || "Sin descripción"}
-                  </p>
+                <h6 className="mb-1">{coach.username}</h6>
+                <p>
+                  {coach.description || "Sin descripción"}
+                </p>
+                <p>
+                  Likes : {coach.likes[0].likes}
+                </p>
                   <button
                     className="btn btn-sm btn-custom-outline"
                     onClick={() => goToProfile(coach.id_ch)}

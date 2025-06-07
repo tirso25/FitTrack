@@ -41,13 +41,16 @@ function App() {
       }
     })
       .then(async response => {
+        const data = await response.json();
+
         if (response.status === 200) {
-          const data = await response.json();
           console.log('Usuario autenticado por token:', data);
           setUser(data.userData);
         } else if (response.status === 204) {
           console.log('No hay token de sesión persistente.');
         } else if (response.status === 400) {
+          console.log(data);
+          
           console.log("No has elegido mantener la sesión iniciada");
         } else {
           const data = await response.json();

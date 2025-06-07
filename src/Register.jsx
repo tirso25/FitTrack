@@ -15,8 +15,27 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const usernameRegex = /^[a-z0-9]{5,20}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{5,}$/;
+
+    if (!usernameRegex.test(username)) {
+      setError('El nombre de usuario debe tener entre 5 y 20 caracteres, solo minúsculas y números.');
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      setError('El correo electrónico no es válido.');
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError('La contraseña debe tener al menos 5 caracteres, una mayúscula, una minúscula, un número y un carácter especial.');
+      return;
+    }
+
     if (password !== repeatPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
@@ -28,17 +47,19 @@ function Register() {
         },
         body: JSON.stringify({ username, email, password, repeatPassword })
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al registrar');
       }
-      
+
       alert('Cuenta creada exitosamente');
       navigate('/EmailCheck', { state: { email } });
     } catch (err) {
       setError(err.message);
     }
   };
+
 
   return (
     <div>

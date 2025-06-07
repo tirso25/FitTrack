@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './SignIn.css'; 
+import './SignIn.css';
 import { faTable } from '@fortawesome/free-solid-svg-icons';
 function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   var [rememberme, setRememberme] = useState('');
-  if(rememberme){
+  if (rememberme) {
     rememberme = true;
   } else {
     rememberme = false;
@@ -25,30 +25,50 @@ function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{5,}$/;
+    const usernameRegex = /^[a-z0-9]{5,20}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const isEmail = email.includes('@');
+
+    if (isEmail && !emailRegex.test(email)) {
+      setError("Correo electrónico inválido.");
+      return;
+    }
+
+    if (!isEmail && !usernameRegex.test(email)) {
+      setError("Nombre de usuario inválido. Debe tener entre 5 y 20 caracteres, solo minúsculas y números.");
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError("La contraseña debe tener al menos 5 caracteres, incluir una mayúscula, una minúscula, un número y un carácter especial.");
+      return;
+    }
+
     try {
       const response = await fetch('https://fittrackapi-fmwr.onrender.com/api/users/signIn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password , rememberme}),
+        body: JSON.stringify({ email, password, rememberme }),
       });
-     
 
       const data = await response.json();
       console.log("Respuesta del servidor:", data);
-      
+
       if (data.token) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('email' ,data.userData.this_user_email);
-        localStorage.setItem('username' ,data.userData.this_user_username);
-        localStorage.setItem('id' ,data.userData.this_user_id);
+        localStorage.setItem('email', data.userData.this_user_email);
+        localStorage.setItem('username', data.userData.this_user_username);
+        localStorage.setItem('id', data.userData.this_user_id);
         localStorage.setItem('rol', data.userData.this_user_role);
         navigate('/');
       } else {
-        throw new Error('Token no recibido');
+        throw new Error(data.message);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error del servidor');
     }
   };
 

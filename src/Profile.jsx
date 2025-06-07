@@ -170,6 +170,8 @@ const Profile = () => {
 
       // Si la petición fue exitosa, actualizamos el estado
       if (res.ok) {
+                const data = await res.json();
+        console.log(data);
         setBookmarks(prev => {
           const updated = [...prev];
           updated[i] = !updated[i];
@@ -190,6 +192,8 @@ const Profile = () => {
           });
 
           if (undoRes.ok) {
+                    const data = await res.json();
+        console.log(data);
             setBookmarks(prev => {
               const updated = [...prev];
               updated[i] = false;
@@ -224,6 +228,9 @@ const Profile = () => {
 
       if (res.ok) {
         // Agregado correctamente
+        const data = await res.json();
+        console.log(data);
+        
         setIsFavorite(true);
       } else {
         // Leer mensaje de error
@@ -450,7 +457,7 @@ const Profile = () => {
               <h3>Este perfil es privado y no puedes entrar a verlo</h3>
             </div>
           </div>
-        ) : (
+        ) : ( 
           <div className="container-fluid p-0">
             <div className="row m-0">
               <div className="sidebar">
