@@ -74,7 +74,6 @@ const Profile = () => {
 
         const userDataArray = await userRes.json();
         const user = userDataArray[0];
-        console.log(userDataArray);
 
         setUserData(user);
 
@@ -170,8 +169,7 @@ const Profile = () => {
 
       // Si la petición fue exitosa, actualizamos el estado
       if (res.ok) {
-                const data = await res.json();
-        console.log(data);
+        const data = await res.json();
         setBookmarks(prev => {
           const updated = [...prev];
           updated[i] = !updated[i];
@@ -192,8 +190,7 @@ const Profile = () => {
           });
 
           if (undoRes.ok) {
-                    const data = await res.json();
-        console.log(data);
+            const data = await res.json();
             setBookmarks(prev => {
               const updated = [...prev];
               updated[i] = false;
@@ -229,8 +226,7 @@ const Profile = () => {
       if (res.ok) {
         // Agregado correctamente
         const data = await res.json();
-        console.log(data);
-        
+
         setIsFavorite(true);
       } else {
         // Leer mensaje de error
@@ -289,7 +285,7 @@ const Profile = () => {
     };
 
     if (formData.password?.trim()) body.password = formData.password.trim();
-      setErroresApi("");
+    setErroresApi("");
     try {
       const res = await fetch(`https://fittrackapi-fmwr.onrender.com/api/users/modifyUser/${profileId}`, {
         method: 'PUT',
@@ -388,21 +384,21 @@ const Profile = () => {
       },
       body: JSON.stringify(data),
     })
-    .then((res) => res.json())
-    .then((json) => {
-      if (json.type === "success") {
-        alert("Ejercicio creado correctamente");
-        // Resetea formulario
-        setExerciseName('');
-        setExerciseDescription('');
-        setExerciseCategory('');
-      } else {
-        alert(json.message || "Error al crear ejercicio");
-      }
-    })
-    .catch((err) => {
-      setErroresApi('Error al crear ejercicio: ' + (err.message || String(err)));
-    });
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.type === "success") {
+          alert("Ejercicio creado correctamente");
+          // Resetea formulario
+          setExerciseName('');
+          setExerciseDescription('');
+          setExerciseCategory('');
+        } else {
+          alert(json.message || "Error al crear ejercicio");
+        }
+      })
+      .catch((err) => {
+        setErroresApi('Error al crear ejercicio: ' + (err.message || String(err)));
+      });
   }
 
   const isPublic = userData?.public ?? true;
@@ -457,7 +453,7 @@ const Profile = () => {
               <h3>Este perfil es privado y no puedes entrar a verlo</h3>
             </div>
           </div>
-        ) : ( 
+        ) : (
           <div className="container-fluid p-0">
             <div className="row m-0">
               <div className="sidebar">
@@ -544,10 +540,10 @@ const Profile = () => {
 
               <div className="content-right">
                 {erroresApi && (
-                        <div className="alert alert-danger" role="alert">
-                          {erroresApi}
-                        </div>
-                      )}
+                  <div className="alert alert-danger" role="alert">
+                    {erroresApi}
+                  </div>
+                )}
                 {isOwner && isCoach && !creatingExercise && (
                   <div className="text-end me-3">
                     <button
@@ -560,60 +556,60 @@ const Profile = () => {
                 )}
 
                 {creatingExercise && (
-                    <div className="container my-4">
-                      <h4>Nuevo Ejercicio</h4>
-                      <form className="card p-4 shadow-sm bg-light" onSubmit={handleSubmitExercise}>
-                        <div className="mb-3">
-                          <label htmlFor="exerciseName" className="form-label">Nombre</label>
-                          <input
-                            type="text"
-                            id="exerciseName"
-                            className="form-control"
-                            value={exerciseName}
-                            onChange={e => setExerciseName(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <label htmlFor="exerciseDescription" className="form-label">Descripción</label>
-                          <textarea
-                            id="exerciseDescription"
-                            className="form-control"
-                            rows="3"
-                            value={exerciseDescription}
-                            onChange={e => setExerciseDescription(e.target.value)}
-                            required
-                          ></textarea>
-                        </div>
-                        <div className="mb-3">
-                          <label htmlFor="exerciseCategory" className="form-label">Categoría</label>
-                           <select
-                            id="exerciseCategory"
-                            className="form-control"
-                            value={exerciseCategory}
-                            onChange={e => setExerciseCategory(e.target.value)}
-                            required
-                          >
-                            <option value="">Selecciona una categoría</option> 
-                            {categories.map(cat => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="d-flex justify-content-end">
-                          <button
-                            type="button"
-                            className="btn btn-secondary me-2"
-                            onClick={() => setCreatingExercise(false)}
-                          >
-                            Cancelar
-                          </button>
-                          <button type="submit" className="btn-edit">Crear</button>
-                        </div>
-                      </form>
-                    </div>
+                  <div className="container my-4">
+                    <h4>Nuevo Ejercicio</h4>
+                    <form className="card p-4 shadow-sm bg-light" onSubmit={handleSubmitExercise}>
+                      <div className="mb-3">
+                        <label htmlFor="exerciseName" className="form-label">Nombre</label>
+                        <input
+                          type="text"
+                          id="exerciseName"
+                          className="form-control"
+                          value={exerciseName}
+                          onChange={e => setExerciseName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="exerciseDescription" className="form-label">Descripción</label>
+                        <textarea
+                          id="exerciseDescription"
+                          className="form-control"
+                          rows="3"
+                          value={exerciseDescription}
+                          onChange={e => setExerciseDescription(e.target.value)}
+                          required
+                        ></textarea>
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="exerciseCategory" className="form-label">Categoría</label>
+                        <select
+                          id="exerciseCategory"
+                          className="form-control"
+                          value={exerciseCategory}
+                          onChange={e => setExerciseCategory(e.target.value)}
+                          required
+                        >
+                          <option value="">Selecciona una categoría</option>
+                          {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="d-flex justify-content-end">
+                        <button
+                          type="button"
+                          className="btn btn-secondary me-2"
+                          onClick={() => setCreatingExercise(false)}
+                        >
+                          Cancelar
+                        </button>
+                        <button type="submit" className="btn-edit">Crear</button>
+                      </div>
+                    </form>
+                  </div>
                 )}
 
                 {!creatingExercise && (

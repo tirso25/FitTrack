@@ -232,7 +232,6 @@ const Admin = () => {
         }
       );
 
-      console.log("Payload enviado:", payload); 
 
       if (!res.ok) {
         const errorText = await res.text(); 
@@ -246,7 +245,6 @@ const Admin = () => {
       }
 
       const data = await res.json();
-      console.log("Ejercicio modificado:", data);
       setShowModalEdit(false);
       obtenerEjercicios(); // recargar la lista
     } catch (err) {

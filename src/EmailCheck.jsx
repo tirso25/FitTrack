@@ -31,7 +31,6 @@ const EmailCheck = () => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log(errorData);
     }
   };
 

@@ -46,9 +46,7 @@ const Busqueda = () => {
     })
       .then(response => response.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          console.log(data);
-          
+        if (Array.isArray(data)) {          
           setExercises(data);
           setBookmarks(new Array(data.length).fill(false));
         } else {
@@ -72,7 +70,6 @@ const Busqueda = () => {
     })
       .then(res => res.json())
       .then(data => {
-        console.log(data);
         if (Array.isArray(data)) {
           setCoachs(data);
         } else {
